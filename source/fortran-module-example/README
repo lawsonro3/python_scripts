@@ -1,0 +1,5 @@
+To use this example, compile the fortran code using the following command
+
+f2py -c -m f2py-test f2py-test.f
+
+The module can then be called directily from python as as the f2py-test.py code as shown
