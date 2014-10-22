@@ -55,7 +55,7 @@ class WaveProperties(object):
     du_dt = array([])
     dw_dt = array([])
     
-def CalculateWaveProperities(wv,L,T,H,d,tLen=25,xLen=100,zLen=75,rho=1025.0,g=9.81):
+def CalculateWaveProperities(L,T,H,d,tLen=25,xLen=100,zLen=75,rho=1025.0,g=9.81):
     
     # Load class
     wv = WaveProperties()   
@@ -80,7 +80,7 @@ def CalculateWaveProperities(wv,L,T,H,d,tLen=25,xLen=100,zLen=75,rho=1025.0,g=9.
     
     # Spatial vectors - this is a shitty way to do a "3D meshgrid"
     xr = linspace(0,L,xLen)
-    zr = linspace(-d,H,zLen)
+    zr = linspace(-d,0,zLen)
     xr,zr = meshgrid(xr,zr)
     wv.x = repeat(xr,tLen).reshape(zLen,xLen,tLen)
     wv.z = repeat(zr,tLen).reshape(zLen,xLen,tLen)
@@ -134,7 +134,8 @@ def CalculateWaveProperities(wv,L,T,H,d,tLen=25,xLen=100,zLen=75,rho=1025.0,g=9.
     wv.dw_dt = -2.*pi**2.*wv.H/wv.T**2.*sinh(wv.k*wv.s)/sinh(wv.k*wv.d)*cos(wv.theta)
     
     # Pressure 
-    wv.p = -wv.rho*wv.g*wv.z + 1./2.*wv.rho*wv.g*wv.H*cosh(wv.k*wv.s)/cosh(wv.k*wv.d)*cos(wv.theta)
+#    wv.p = -wv.rho*wv.g*wv.z + 1./2.*wv.rho*wv.g*wv.H*cosh(wv.k*wv.s)/cosh(wv.k*wv.d)*cos(wv.theta)
+    wv.p = 1./2.*wv.rho*wv.g*wv.H*cosh(wv.k*wv.s)/cosh(wv.k*wv.d)*cos(wv.theta)
     
     return wv
 
