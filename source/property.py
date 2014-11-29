@@ -8,8 +8,8 @@ A generic properity for a material or a fluid
 """
 class Property(object):
     value = None
-    units = None
-    discription = None
+    units = 'None'
+    discription = 'None'
     def __init__(self):
         pass
     def __str__(self):
@@ -17,6 +17,4 @@ class Property(object):
             + '\nunits = '+str(self.units) \
             + '\ndiscription = '+self.discription               
     def __repr__(self):
-        return 'value = '+str(self.value) \
-            + '\nunits = '+str(self.units) \
-            + '\ndiscription = '+self.discription               
+        return str(self.value)
