@@ -84,12 +84,12 @@ class WamitOutput(object):
         
         for i in xrange(3):
             ax[0].set_title('Diagional Compinent of Added Mass Matrix')
-            ax[0].plot(self.freq,self.addedMassDiag[:,i],'x-',label='Component (' + str(i) + ', ' + str(i) + ')')
+            ax[0].plot(self.freq,self.addedMassDiag[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[0].set_ylabel('Added Mass (kg)')
-            ax[1].plot(self.freq,self.radiationDampingDiag[:,i],'x-',label='Component (' + str(i) + ', ' + str(i) + ')')
+            ax[1].plot(self.freq,self.radiationDampingDiag[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[1].set_title('Diagional Compinent of Radiation Damping Matrix')
             ax[1].set_xlabel('Wave Frequency (rad/s)')
-            ax[1].set_ylabel('Radiation Damping')
+            ax[1].set_ylabel('Radiation Damping (N-s/m')
             ax[1].legend(loc=0)
             
         plt.show()
