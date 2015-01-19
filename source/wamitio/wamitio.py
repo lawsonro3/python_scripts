@@ -7,6 +7,7 @@ Created on Mon Nov 17 17:51:21 2014
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import collections
 
 class WamitOutput(object):
     '''
@@ -50,7 +51,7 @@ class WamitOutput(object):
         '''
         with open(self.files['out'],'r') as fid:
             self.wamitOutRaw = fid.readlines()
-        
+   
         for i, line in enumerate(self.wamitOutRaw):
             if "Input from Geometric Data File:" in line:
                 self.numBodies = 1
@@ -71,6 +72,7 @@ class WamitOutput(object):
                 self.addedMassAndDampingRaw[tempFreq] = self.wamitOutRaw[i+7:i+7+(6*self.numBodies)**2]
         self.period = np.array(self.period).astype(float)   
         self.freq = 2.*np.pi/self.period
+        self.numFreqs = np.size(self.freq)
         for i,freq in enumerate(self.freq):
             self.addedMassAll[freq]  =  np.array([str(self.addedMassAndDampingRaw[freq][temp]).split()[2] for temp in xrange((6*self.numBodies)**2)]).astype(float).reshape(6*self.numBodies,6*self.numBodies)*self.density
             self.radDampingAll[freq] =  np.array([str(self.addedMassAndDampingRaw[freq][temp]).split()[3] for temp in xrange((6*self.numBodies)**2)]).astype(float).reshape(6*self.numBodies,6*self.numBodies)*self.density*self.freq[i]
@@ -82,11 +84,10 @@ class WamitOutput(object):
             for j,freq in enumerate(self.freq):
                 addedMass[freq]  = self.addedMassAll[freq][nb*6:nb*6+6]
                 radDamping[freq] = self.radDampingAll[freq][nb*6:nb*6+6]
+                addedMassDiag[freq] = np.diag(addedMass[freq][:,nb*6:nb*6+6])
+                radDampingDiag[freq] = np.diag(radDamping[freq][:,nb*6:nb*6+6])
             self.addedMass[nb] = addedMass
             self.radDamping[nb] = radDamping
-            for i,freq in enumerate(self.freq):
-                addedMassDiag[freq] = np.diag(self.addedMass[nb][freq][:,nb*6:nb*6+6])
-                radDampingDiag[freq] = np.diag(self.radDamping[nb][freq][:,nb*6:nb*6+6])
             self.addedMassDiag[nb] = addedMassDiag
             self.radDampingDiag[nb] = radDampingDiag
         
@@ -103,17 +104,20 @@ class WamitOutput(object):
         ax[0].plot()
         ax[1].plot()
         
-        data = {}
-        data['freq'] = np.array(self.addedMassDiag[body].keys())
-        data['am'] = np.array(self.addedMassDiag[body].values())
-        data['rad'] = np.array(self.radDampingDiag[body].values())
+        am = []
+        rad = []
+        for i,freq in enumerate(self.freq):
+            am.append(self.addedMassDiag[body][freq])
+            rad.append(self.radDampingDiag[body][freq])
+        am = np.array(am)
+        rad = np.array(rad)
         
         for i in xrange(3):
-            ax[0].set_title('Diagional Compinent of Added Mass Matrix')
-            ax[0].plot(data['freq'],data['am'][:,i],'x',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+            ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body))
+            ax[0].plot(self.freq,am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[0].set_ylabel('Added Mass (kg)')
-            ax[1].plot(data['freq'],data['rad'][:,i],'x',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-            ax[1].set_title('Diagional Compinent of Radiation Damping Matrix')
+            ax[1].plot(self.freq,rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+            ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body))
             ax[1].set_xlabel('Wave Frequency (rad/s)')
             ax[1].set_ylabel('Radiation Damping (N-s/m')
             ax[1].legend(loc=0)
