@@ -19,11 +19,11 @@ class WamitOutput(object):
     Outputs:
         None
     '''
-    def __init__(self,directory,simName):
+    def __init__(self,directory,outFile):
         self.density = 1000.0
         self.gravity = 9.81 
         self.dir = directory
-        self.simName = simName
+        self.outFile = outFile
 
 
         self.numBodies = 0
@@ -38,7 +38,7 @@ class WamitOutput(object):
         self.radDampingAll = {}
         self.addedMassAndDampingRaw = {}
         self.files = {}
-        self.files['out'] = self.dir + os.path.sep + self.simName + '.out'
+        self.files['out'] = self.dir + os.path.sep + self.outFile
         self.readOutFile()
     
     def readOutFile(self):

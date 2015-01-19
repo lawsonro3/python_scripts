@@ -30,7 +30,8 @@ class AqwaOutput(object):
         self.cob = {}
         self.volDisp = {}
         self.period = {}
-        self.freq = {}
+        self.freqAllBodies = {}
+        self.freq = None
         self.addedMass = {}
         self.addedMassDiag = {}
         self.addedMassAll = {}
@@ -127,13 +128,15 @@ class AqwaOutput(object):
                     ind += 45
                 amAll[freq[-1]] = am
                 self.period[bodNum] = np.array(period).astype(float)
-                self.freq[bodNum] = np.array(freq).astype(float)
+                self.freqAllBodies[bodNum] = np.array(freq).astype(float)
                 self.addedMass[bodNum] = amAll
                 self.radDamping[bodNum] = radAll
                 self.addedMassDiag[bodNum] = amDiagAll
                 self.radDampingDiag[bodNum] = radDiagAll
                 
                 bodNum += 1
+                
+        self.freq = self.freqAllBodies[0]
                     
                     
                      
@@ -153,7 +156,7 @@ class AqwaOutput(object):
         
         am = []
         rad = []
-        for i,freq in enumerate(self.freq[body]):
+        for i,freq in enumerate(self.freq):
             am.append(self.addedMassDiag[body][freq])
             rad.append(self.radDampingDiag[body][freq])
         am = np.array(am)
@@ -161,9 +164,9 @@ class AqwaOutput(object):
         
         for i in xrange(3):
             ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body))
-            ax[0].plot(self.freq[body],am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+            ax[0].plot(self.freq,am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[0].set_ylabel('Added Mass (kg)')
-            ax[1].plot(self.freq[body],rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+            ax[1].plot(self.freq,rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body))
             ax[1].set_xlabel('Wave Frequency (rad/s)')
             ax[1].set_ylabel('Radiation Damping (N-s/m)')
