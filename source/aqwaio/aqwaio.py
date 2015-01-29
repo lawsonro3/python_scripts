@@ -49,6 +49,7 @@ class AqwaOutput(object):
         self.files = {}
         self.files['out'] = self.dir + os.path.sep + self.outFile
         self.files['hdf5'] = self.dir + os.path.sep + self.outFile[0:-4] + '.h5'
+        self.files['wecSimHydroData'] = None
         self.kHeave = {}
         self.kRoll = {}
         self.kPitch = {}
@@ -208,9 +209,13 @@ class AqwaOutput(object):
             for i in range(self.numBodies):
                 
                 per = f.create_dataset('body' + str(i) + '/period',data=self.periodAllBodies[i])
+                per.attrs['units'] = 's'                
+                
                 freq = f.create_dataset('body' + str(i) + '/frequency',data=self.freqAllBodies[i])
+                freq.attrs['units'] = 'rad/s'                
+                
                 kMat = f.create_dataset('body' + str(i) + '/stiffnessMatrix',data=self.kMatrix[i])
-                amInf = f.create_dataset('body' + str(i) + '/addedMassCoefficients/infFreq',data=self.addedMassInfFreq[i])
+                
                 cg = f.create_dataset('body' + str(i) + '/centerOfGravity',data=self.cg[i])
                 cb = f.create_dataset('body' + str(i) + '/centerOfBuoyancy',data=self.cb[i])
                 vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=self.volDisp[i])
@@ -218,13 +223,25 @@ class AqwaOutput(object):
                 exMag = f.create_dataset('body' + str(i) + '/excitationForce/magnitude',data=self.exMag[i])
                 
                 exPhase = f.create_dataset('body' + str(i) + '/excitationForce/phase',data=self.exPhase[i])
-                exPhase.attrs['units'] = 'radians'
+                exPhase.attrs['units'] = 'rad'
                 
                 exRe = f.create_dataset('body' + str(i) + '/excitationForce/imaginaryComponent',data=self.exIm[i])
                 exIm = f.create_dataset('body' + str(i) + '/excitationForce/realComponent',data=self.exRe[i])
-                
+
+                # Write added mass information                
+                amInf = f.create_dataset('body' + str(i) + '/addedMassCoefficients/infFreq',data=self.addedMassInfFreq[i])
+                amInf.attrs['units for translational degrees of freedom'] = 'kg'                
+                amInf.attrs['units for rotational degrees of freedom'] = 'kg-m^2'                
                 am = f.create_dataset('body' + str(i) + '/addedMassCoefficients/discreteFeqs',data=self.addedMass[i])
+                am.attrs['units for translational degrees of freedom'] = 'kg'                
+                am.attrs['units for rotational degrees of freedom'] = 'kg-m^2'
+                
                 rad = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/discreteFeqs',data=self.radDamping[i])
+                
+                wDepth = f.create_dataset('body' + str(i) + '/waterDepth',data=self.waterDepth)
+                wDepth.attrs['units'] = 'm'
+                
+                
                 
     def cutFile1(self):
         self.hydroParmInd = []
@@ -236,7 +253,6 @@ class AqwaOutput(object):
                 self.addedMassInd.append(i)
 
     def writeWecSimHydroData(self,bodyNumber=0):
-        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(bodyNumber) + '.mat'
         data = {}
         data['waterDepth'] = self.waterDepth
         data['waveHeading'] = self.waveDir[bodyNumber]
