@@ -48,7 +48,6 @@ class AqwaOutput(object):
         self.addedMassAndDampingRaw = {}
         self.files = {}
         self.files['out'] = self.dir + os.path.sep + self.outFile
-        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData.mat'
         self.kHeave = {}
         self.kRoll = {}
         self.kPitch = {}
@@ -205,6 +204,7 @@ class AqwaOutput(object):
                 
     
     def writeWecSimHydroData(self,bodyNumber=0):
+        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(bodyNumber) + '.mat'
         data = {}
         data['waterDepth'] = self.waterDepth.copy()
         data['waveHeading'] = self.waveDir[bodyNumber]
