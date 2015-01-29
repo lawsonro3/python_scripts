@@ -236,6 +236,7 @@ class AqwaOutput(object):
                 self.addedMassInd.append(i)
 
     def writeWecSimHydroData(self,bodyNumber=0):
+        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(bodyNumber) + '.mat'
         data = {}
         data['waterDepth'] = self.waterDepth
         data['waveHeading'] = self.waveDir[bodyNumber]
