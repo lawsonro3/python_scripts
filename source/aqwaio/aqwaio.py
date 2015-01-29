@@ -162,12 +162,11 @@ class AqwaOutput(object):
 
             if '* * * * H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   S T R U C T U R E'  in line:
                 if 'FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY' in self.outRaw[i+4]:
-                    self.exAll[bodNum2] = ascii.read(self.outRaw[i+12:i+11+self.numFreqs[0]]) # Change this index from 0 to the correct index
+                    temp3 = ascii.read(self.outRaw[i+12:i+11+self.numFreqs[0]]) # Change this index from 0 to the correct index
                     temp = self.outRaw[i+11].split()
                     temp2 = float(temp.pop(2))
-                    print temp2
-                    if temp2 == 0.00:
-                        print 'hi there mike'
+                    if temp2 == 180:
+                        self.exAll[bodNum2] = temp3
                         self.waveDir[bodNum2] = temp2
                         self.exAll[bodNum2].add_row(temp)
                         temp = self.exAll[bodNum2].copy()
@@ -218,10 +217,6 @@ class AqwaOutput(object):
         data['fAddedMassInf'] = self.addedMassZeroFreq[bodyNumber]
         amOut = np.zeros((6,6,int(self.numFreqs[bodyNumber])))  
         radOut = np.zeros((6,6,int(self.numFreqs[bodyNumber]))) 
-        exReOut = np.zeros((6,int(self.numFreqs[bodyNumber]))) 
-        exImOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
-        exOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
-        exPhaseOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
         keys = self.addedMass[bodyNumber].keys()
         keys.sort()
         for j, freq in enumerate(keys):
