@@ -162,30 +162,34 @@ class AqwaOutput(object):
 
             if '* * * * H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   S T R U C T U R E'  in line:
                 if 'FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY' in self.outRaw[i+4]:
-
                     self.exAll[bodNum2] = ascii.read(self.outRaw[i+12:i+11+self.numFreqs[0]]) # Change this index from 0 to the correct index
                     temp = self.outRaw[i+11].split()
-                    self.waveDir[bodNum2] = float(temp.pop(2))
-                    self.exAll[bodNum2].add_row(temp)
-                    temp = self.exAll[bodNum2].copy()
-                    self.exAll[bodNum2][0] = temp[-1]
-                    for k,line in enumerate(self.exAll[bodNum2]):
-                        if k > 0:
-                            self.exAll[bodNum2][k] = temp[k-1]                            
-                    self.ex[bodNum2] = np.array([self.exAll[bodNum2].field(2),
-                                               self.exAll[bodNum2].field(4),
-                                               self.exAll[bodNum2].field(6),
-                                               self.exAll[bodNum2].field(8),
-                                               self.exAll[bodNum2].field(10),
-                                               self.exAll[bodNum2].field(12)]).transpose()
-                    self.exPhase[bodNum2] = np.array([self.exAll[bodNum2].field(3),
-                                               self.exAll[bodNum2].field(5),
-                                               self.exAll[bodNum2].field(7),
-                                               self.exAll[bodNum2].field(9),
-                                               self.exAll[bodNum2].field(11),
-                                               self.exAll[bodNum2].field(13)]).transpose()
-                    self.exRe[bodNum2] = self.ex[bodNum2]*np.cos(np.deg2rad(self.exPhase[bodNum2]))
-                    self.exIm[bodNum2]  = self.ex[bodNum2]*np.sin(np.deg2rad(self.exPhase[bodNum2]))
+                    temp2 = float(temp.pop(2))
+                    print temp2
+                    if temp2 == 0.00:
+                        print 'hi there mike'
+                        self.waveDir[bodNum2] = temp2
+                        self.exAll[bodNum2].add_row(temp)
+                        temp = self.exAll[bodNum2].copy()
+                        self.exAll[bodNum2][0] = temp[-1]
+                        for k,line in enumerate(self.exAll[bodNum2]):
+                            if k > 0:
+                                self.exAll[bodNum2][k] = temp[k-1]                            
+                        self.ex[bodNum2] = np.array([self.exAll[bodNum2].field(2),
+                                                   self.exAll[bodNum2].field(4),
+                                                   self.exAll[bodNum2].field(6),
+                                                   self.exAll[bodNum2].field(8),
+                                                   self.exAll[bodNum2].field(10),
+                                                   self.exAll[bodNum2].field(12)]).transpose()
+                        self.exPhase[bodNum2] = np.array([self.exAll[bodNum2].field(3),
+                                                   self.exAll[bodNum2].field(5),
+                                                   self.exAll[bodNum2].field(7),
+                                                   self.exAll[bodNum2].field(9),
+                                                   self.exAll[bodNum2].field(11),
+                                                   self.exAll[bodNum2].field(13)]).transpose()
+                        self.exRe[bodNum2] = self.ex[bodNum2]*np.cos(np.deg2rad(self.exPhase[bodNum2]))
+                        self.exIm[bodNum2]  = self.ex[bodNum2]*np.sin(np.deg2rad(self.exPhase[bodNum2]))
+                        bodNum2 += 1
 
     
     def cutFile1(self):
@@ -201,36 +205,35 @@ class AqwaOutput(object):
                 
                 
     
-    def writeWecSimHydroData(self):
-        for i in xrange(1):
-            data = {}
-            data['waterDepth'] = self.waterDepth.copy()
-            data['waveHeading'] = self.waveDir[i]
-            data['vol'] = self.volDisp[i]
-            data['cg'] = self.cg[i].copy()
-            self.periodAllBodies[i].sort()
-            data['period'] = self.periodAllBodies[i]
-            data['linearHyroRestCoef'] = self.kMatrix[i]
-            data['fAddedMassZero'] = self.addedMassInfFreq[i]
-            data['fAddedMassInf'] = self.addedMassZeroFreq[i]
-            amOut = np.zeros((6,6,int(self.numFreqs[i])))  
-            radOut = np.zeros((6,6,int(self.numFreqs[i]))) 
-            exReOut = np.zeros((6,int(self.numFreqs[i]))) 
-            exImOut = np.zeros((6,int(self.numFreqs[i])))
-            exOut = np.zeros((6,int(self.numFreqs[i])))
-            exPhaseOut = np.zeros((6,int(self.numFreqs[i])))
-            keys = self.addedMass[i].keys()
-            keys.sort()
-            for j, freq in enumerate(keys):
-                amOut[:,:,j] = self.addedMass[i][freq]
-                radOut[:,:,j] = self.radDamping[i][freq]
-            data['fAddedMass'] = amOut
-            data['fDamping'] = radOut
-            data['fExtRe'] = np.fliplr(self.exRe[i].transpose())
-            data['fExtIm'] = np.fliplr(self.exIm[i].transpose())
-            data['fExtMag'] = np.fliplr(self.ex[i].transpose())
-            data['fExtPhase'] = np.fliplr(self.exPhase[i].transpose())
-            sio.savemat(self.files['wecSimHydroData'],data)
+    def writeWecSimHydroData(self,bodyNumber=0):
+        data = {}
+        data['waterDepth'] = self.waterDepth.copy()
+        data['waveHeading'] = self.waveDir[bodyNumber]
+        data['vol'] = self.volDisp[bodyNumber]
+        data['cg'] = self.cg[bodyNumber].copy()
+        self.periodAllBodies[bodyNumber].sort()
+        data['period'] = self.periodAllBodies[bodyNumber]
+        data['linearHyroRestCoef'] = self.kMatrix[bodyNumber]
+        data['fAddedMassZero'] = self.addedMassInfFreq[bodyNumber]
+        data['fAddedMassInf'] = self.addedMassZeroFreq[bodyNumber]
+        amOut = np.zeros((6,6,int(self.numFreqs[bodyNumber])))  
+        radOut = np.zeros((6,6,int(self.numFreqs[bodyNumber]))) 
+        exReOut = np.zeros((6,int(self.numFreqs[bodyNumber]))) 
+        exImOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
+        exOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
+        exPhaseOut = np.zeros((6,int(self.numFreqs[bodyNumber])))
+        keys = self.addedMass[bodyNumber].keys()
+        keys.sort()
+        for j, freq in enumerate(keys):
+            amOut[:,:,j] = self.addedMass[bodyNumber][freq]
+            radOut[:,:,j] = self.radDamping[bodyNumber][freq]
+        data['fAddedMass'] = amOut
+        data['fDamping'] = radOut
+        data['fExtRe'] = np.fliplr(self.exRe[bodyNumber].transpose())
+        data['fExtIm'] = np.fliplr(self.exIm[bodyNumber].transpose())
+        data['fExtMag'] = np.fliplr(self.ex[bodyNumber].transpose())
+        data['fExtPhase'] = np.fliplr(self.exPhase[bodyNumber].transpose())
+        sio.savemat(self.files['wecSimHydroData'],data)
         
     def plotAddedMassAndDamping(self,body=0):
         '''

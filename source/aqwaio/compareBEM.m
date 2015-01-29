@@ -8,11 +8,6 @@ c.fExtIm = c.fExt.Im;
 
 m = load('./aqwa-data-wecSimHydroData.mat');
 
-% m.fExtRe = fliplr(m.fExtRe);
-% m.fExtMag = fliplr(m.fExtMag);
-% m.fExtIm = fliplr(m.fExtIm);
-% m.period = fliplr(m.period);
-
 i = 1;
 plot(c.period,c.fExtMag(i,:),'o-'); hold on
 plot(m.period,m.fExtMag(i,:),'x-');
