@@ -164,8 +164,8 @@ class AqwaOutput(object):
                 self.maxFreq[bodNum] = np.max(self.freqAllBodies[bodNum])
                 self.minFreq[bodNum] = np.max(self.freqAllBodies[bodNum])
                 self.numFreqs[bodNum] = np.size(self.freqAllBodies[bodNum])
-                self.addedMassInfFreq[bodNum] = self.addedMass[bodNum][-1]
-                self.addedMassZeroFreq[bodNum] = self.addedMass[bodNum][0]
+                self.addedMassInfFreq[bodNum] = self.addedMass[bodNum][:,:,-1]
+                self.addedMassZeroFreq[bodNum] = self.addedMass[bodNum][:,:,0]
       
                 bodNum += 1
 
