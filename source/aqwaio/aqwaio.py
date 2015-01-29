@@ -164,8 +164,8 @@ class AqwaOutput(object):
                 self.maxFreq[bodNum] = np.max(self.freqAllBodies[bodNum])
                 self.minFreq[bodNum] = np.max(self.freqAllBodies[bodNum])
                 self.numFreqs[bodNum] = np.size(self.freqAllBodies[bodNum])
-                self.addedMassInfFreq[bodNum] = self.addedMass[bodNum][self.maxFreq[bodNum]]
-                self.addedMassZeroFreq[bodNum] = self.addedMass[bodNum][self.minFreq[bodNum]]
+                self.addedMassInfFreq[bodNum] = self.addedMass[bodNum][-1]
+                self.addedMassZeroFreq[bodNum] = self.addedMass[bodNum][0]
       
                 bodNum += 1
 
@@ -252,25 +252,26 @@ class AqwaOutput(object):
             if 'FROUDE KRYLOV + DIFFRACTION FORCES - VARIATION WITH WAVE DIRECTION' in line:
                 self.addedMassInd.append(i)
 
-    def writeWecSimHydroData(self,bodyNumber=0):
-        data = {}
-        data['waterDepth'] = self.waterDepth
-        data['waveHeading'] = self.waveDir[bodyNumber]
-        data['vol'] = self.volDisp[bodyNumber]
-        data['cg'] = self.cg[bodyNumber]
-        data['period'] = self.periodAllBodies[bodyNumber][::-1]
-        data['linearHyroRestCoef'] = self.kMatrix[bodyNumber]
-        data['fAddedMassZero'] = self.addedMassInfFreq[bodyNumber]
-        data['fAddedMassInf'] = self.addedMassZeroFreq[bodyNumber]
-        data['fAddedMass'] = self.addedMass[bodyNumber][:,:,::-1]
-        data['fDamping'] = self.addedMass[bodyNumber][:,:,::-1]
-        data['fExtRe'] = self.exRe[bodyNumber][::-1,:].transpose()
-        data['fExtIm'] = self.exIm[bodyNumber][::-1,:].transpose()
-        data['fExtMag'] = self.exMag[bodyNumber][::-1,:].transpose()
-        data['fExtPhase'] = self.exPhase[bodyNumber][::-1,:].transpose()
-        
-        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(bodyNumber) + '.mat'
-        sio.savemat(self.files['wecSimHydroData'],data)
+    def writeWecSimHydroData(self):
+        for i in range(self.numBodies):
+            data = {}
+            data['waterDepth'] = self.waterDepth
+            data['waveHeading'] = self.waveDir[i]
+            data['vol'] = self.volDisp[i]
+            data['cg'] = self.cg[i]
+            data['period'] = self.periodAllBodies[i][::-1]
+            data['linearHyroRestCoef'] = self.kMatrix[i]
+            data['fAddedMassZero'] = self.addedMassInfFreq[i]
+            data['fAddedMassInf'] = self.addedMassZeroFreq[i]
+            data['fAddedMass'] = self.addedMass[i][:,:,::-1]
+            data['fDamping'] = self.addedMass[i][:,:,::-1]
+            data['fExtRe'] = self.exRe[i][::-1,:].transpose()
+            data['fExtIm'] = self.exIm[i][::-1,:].transpose()
+            data['fExtMag'] = self.exMag[i][::-1,:].transpose()
+            data['fExtPhase'] = self.exPhase[i][::-1,:].transpose()
+            
+            self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(i) + '.mat'
+            sio.savemat(self.files['wecSimHydroData'],data)
         
     def plotAddedMassAndDamping(self,body=0):
         '''
