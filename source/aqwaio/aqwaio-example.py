@@ -9,9 +9,14 @@ import matplotlib.pyplot as plt
 
 plt.close('all')
 
-aq = aio.AqwaOutput('/Users/mlawson/Applications/python-scripts/source/aqwaio',outFile='aqwa-data.lis')
-aq.plotAddedMassAndDamping(body=0)
-aq.plotAddedMassAndDamping(body=1)
-aq.plotAddedMassAndDamping(body=2)
-aq.writeWecSimHydroData(bodyNumber=1)
+aq = aio.AqwaOutput(directory='./',outFile='aqwa-data.lis')
 
+#aq.plotAddedMassAndDamping(body=0)
+#aq.plotAddedMassAndDamping(body=1)
+#aq.plotAddedMassAndDamping(body=2)
+
+aq.writeWecSimHydroData(bodyNumber=0)
+aq.writeWecSimHydroData(bodyNumber=1)
+aq.writeWecSimHydroData(bodyNumber=2)
+
+aq.writeHdf5()

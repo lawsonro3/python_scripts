@@ -6,7 +6,7 @@ c.fExtRe = c.fExt.Re;
 c.fExtMag = c.fExt.Mag;
 c.fExtIm = c.fExt.Im;
 
-m = load('./aqwa-data-wecSimHydroData.mat');
+m = load('./aqwa-data-wecSimHydroData1.mat');
 
 i = 1;
 plot(c.period,c.fExtMag(i,:),'o-'); hold on
@@ -27,4 +27,4 @@ legend('carlos','mike')
 
 figure;
 plot(c.period); hold on;
-plot(m.period)
+plot(m.period')

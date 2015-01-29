@@ -9,7 +9,7 @@ import numpy as np
 from astropy.io import ascii
 import matplotlib.pyplot as plt
 import scipy.io as sio
-import re
+import h5py
 
 class AqwaOutput(object):
     '''
@@ -29,7 +29,7 @@ class AqwaOutput(object):
         self.numBodies = 0
         self.bodyNames = {}
         self.cg = {}
-        self.cob = {}
+        self.cb = {}
         self.volDisp = {}
         self.periodAllBodies = {}
         self.freqAllBodies = {}
@@ -48,7 +48,7 @@ class AqwaOutput(object):
         self.addedMassAndDampingRaw = {}
         self.files = {}
         self.files['out'] = self.dir + os.path.sep + self.outFile
-        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData.mat'
+        self.files['hdf5'] = self.dir + os.path.sep + self.outFile[0:-4] + '.h5'
         self.kHeave = {}
         self.kRoll = {}
         self.kPitch = {}
@@ -56,7 +56,7 @@ class AqwaOutput(object):
         self.buoyancyForce = {}
         self.kMatrix = {}
         self.exAll = {}
-        self.ex = {}
+        self.exMag = {}
         self.exRe = {}
         self.exIm = {}
         self.exPhase = {}
@@ -64,6 +64,7 @@ class AqwaOutput(object):
         self.waveDir = {}
 
         self.readOutFile()
+#        self.writeHdf5()
 
     def readOutFile(self):
         
@@ -84,7 +85,7 @@ class AqwaOutput(object):
                 cob.append(np.array(self.outRaw[i+14].split())[-1].astype(float))
                 cob.append(np.array(self.outRaw[i+15].split())[-1].astype(float))
                 cob.append(np.array(self.outRaw[i+16].split())[-1].astype(float))
-                self.cob[self.numBodies-1] = np.array(cob)
+                self.cb[self.numBodies-1] = np.array(cob)
                 self.kHeave[self.numBodies-1]  = np.array(self.outRaw[i+4].split())[-3:].astype(float)
                 self.kRoll[self.numBodies-1]   = np.array(self.outRaw[i+5].split())[-3:].astype(float)
                 self.kPitch[self.numBodies-1]  = np.array(self.outRaw[i+6].split())[-3:].astype(float) # Fix this!!!
@@ -94,8 +95,8 @@ class AqwaOutput(object):
                 runLoop = True
                 period = []
                 freq = []
-                amAll = {}
-                radAll = {}
+#                amAll = np.array([])
+#                radAll = np.array([])
                 kMatrix = []
                 amDiagAll = {}
                 radDiagAll = {}
@@ -113,6 +114,7 @@ class AqwaOutput(object):
                 
                 self.kMatrix[bodNum] = np.array(kMatrix)
                 
+                count = 0
                 while runLoop is True:  
                     am = []
                     rad = []
@@ -128,7 +130,7 @@ class AqwaOutput(object):
                     am.append(np.array(self.outRaw[i+ind+16].split()[1:]).astype(float))
                     am.append(np.array(self.outRaw[i+ind+18].split()[1:]).astype(float))
                     am.append(np.array(self.outRaw[i+ind+20].split()[1:]).astype(float))
-                    
+                    am = np.array(am).reshape(6,6,1)
                     
                     rad.append(np.array(self.outRaw[i+ind+30].split()[1:]).astype(float))
                     rad.append(np.array(self.outRaw[i+ind+32].split()[1:]).astype(float))
@@ -136,13 +138,21 @@ class AqwaOutput(object):
                     rad.append(np.array(self.outRaw[i+ind+36].split()[1:]).astype(float))
                     rad.append(np.array(self.outRaw[i+ind+38].split()[1:]).astype(float))
                     rad.append(np.array(self.outRaw[i+ind+40].split()[1:]).astype(float))
+                    rad = np.array(rad).reshape(6,6,1)
 
-                    amAll[float(freq[-1])] = np.array(am)
-                    radAll[float(freq[-1])] = np.array(rad)
-                    amDiagAll[float(freq[-1])] = np.diag(np.array(am))
-                    radDiagAll[float(freq[-1])] = np.diag(np.array(rad))
+                    if count is 0:
+                        amAll = am
+                        radAll = rad
+                    else:
+                        amAll = np.append(amAll,am,axis=2)
+                        radAll = np.append(radAll,rad,axis=2)
+                    
+#                    amDiagAll[:,:,count]  = np.diag(np.array(am))
+#                    radDiagAll[:,:,count]  = np.diag(np.array(rad))
                     
                     ind += 45
+                    count += 1
+                    
                 self.periodAllBodies[bodNum] = np.array(period).astype(float)
                 self.freqAllBodies[bodNum] = np.array(freq).astype(float)
                 self.addedMass[bodNum] = amAll
@@ -158,13 +168,13 @@ class AqwaOutput(object):
       
                 bodNum += 1
 
-            # needs to be fixed to address indexing problems with excitation forces
-
             if '* * * * H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   S T R U C T U R E'  in line:
                 if 'FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY' in self.outRaw[i+4]:
                     temp3 = ascii.read(self.outRaw[i+12:i+11+self.numFreqs[0]]) # Change this index from 0 to the correct index
                     temp = self.outRaw[i+11].split()
                     temp2 = float(temp.pop(2))
+                    exMag = []
+                    exPhase = []
                     if temp2 == 180:
                         self.exAll[bodNum2] = temp3
                         self.waveDir[bodNum2] = temp2
@@ -173,24 +183,49 @@ class AqwaOutput(object):
                         self.exAll[bodNum2][0] = temp[-1]
                         for k,line in enumerate(self.exAll[bodNum2]):
                             if k > 0:
-                                self.exAll[bodNum2][k] = temp[k-1]                            
-                        self.ex[bodNum2] = np.array([self.exAll[bodNum2].field(2),
-                                                   self.exAll[bodNum2].field(4),
-                                                   self.exAll[bodNum2].field(6),
-                                                   self.exAll[bodNum2].field(8),
-                                                   self.exAll[bodNum2].field(10),
-                                                   self.exAll[bodNum2].field(12)]).transpose()
-                        self.exPhase[bodNum2] = np.array([self.exAll[bodNum2].field(3),
-                                                   self.exAll[bodNum2].field(5),
-                                                   self.exAll[bodNum2].field(7),
-                                                   self.exAll[bodNum2].field(9),
-                                                   self.exAll[bodNum2].field(11),
-                                                   self.exAll[bodNum2].field(13)]).transpose()
-                        self.exRe[bodNum2] = self.ex[bodNum2]*np.cos(np.deg2rad(self.exPhase[bodNum2]))
-                        self.exIm[bodNum2]  = self.ex[bodNum2]*np.sin(np.deg2rad(self.exPhase[bodNum2]))
+                                self.exAll[bodNum2][k] = temp[k-1]  
+                        for m,freq in enumerate(self.exAll[bodNum2].field(1)):
+                            exMag.append(np.array([self.exAll[bodNum2].field(2)[m],
+                                                       self.exAll[bodNum2].field(4)[m],
+                                                       self.exAll[bodNum2].field(6)[m],
+                                                       self.exAll[bodNum2].field(8)[m],
+                                                       self.exAll[bodNum2].field(10)[m],
+                                                       self.exAll[bodNum2].field(12)[m]]))
+                            exPhase.append(np.array([self.exAll[bodNum2].field(3)[m],
+                                                       self.exAll[bodNum2].field(5)[m],
+                                                       self.exAll[bodNum2].field(7)[m],
+                                                       self.exAll[bodNum2].field(9)[m],
+                                                       self.exAll[bodNum2].field(11)[m],
+                                                       self.exAll[bodNum2].field(13)[m]]))
+                        self.exMag[bodNum2] = np.array(exMag)
+                        self.exPhase[bodNum2] = np.array(exPhase)
+                        self.exRe[bodNum2] = self.exMag[bodNum2]*np.cos(np.deg2rad(self.exPhase[bodNum2]))
+                        self.exIm[bodNum2]  = self.exMag[bodNum2]*np.sin(np.deg2rad(self.exPhase[bodNum2]))
                         bodNum2 += 1
-
-    
+                        
+    def writeHdf5(self):
+        with h5py.File(self.files['hdf5'], "w") as f:        
+            for i in range(self.numBodies):
+                
+                per = f.create_dataset('body' + str(i) + '/period',data=self.periodAllBodies[i])
+                freq = f.create_dataset('body' + str(i) + '/frequency',data=self.freqAllBodies[i])
+                kMat = f.create_dataset('body' + str(i) + '/stiffnessMatrix',data=self.kMatrix[i])
+                amInf = f.create_dataset('body' + str(i) + '/addedMassCoefficients/infFreq',data=self.addedMassInfFreq[i])
+                cg = f.create_dataset('body' + str(i) + '/centerOfGravity',data=self.cg[i])
+                cb = f.create_dataset('body' + str(i) + '/centerOfBuoyancy',data=self.cb[i])
+                vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=self.volDisp[i])
+                
+                exMag = f.create_dataset('body' + str(i) + '/excitationForce/magnitude',data=self.exMag[i])
+                
+                exPhase = f.create_dataset('body' + str(i) + '/excitationForce/phase',data=self.exPhase[i])
+                exPhase.attrs['units'] = 'radians'
+                
+                exRe = f.create_dataset('body' + str(i) + '/excitationForce/imaginaryComponent',data=self.exIm[i])
+                exIm = f.create_dataset('body' + str(i) + '/excitationForce/realComponent',data=self.exRe[i])
+                
+                am = f.create_dataset('body' + str(i) + '/addedMassCoefficients/discreteFeqs',data=self.addedMass[i])
+                rad = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/discreteFeqs',data=self.radDamping[i])
+                
     def cutFile1(self):
         self.hydroParmInd = []
         self.addedMassInd = []
@@ -199,35 +234,25 @@ class AqwaOutput(object):
                 self.hydroParmInd.append(i) 
             if 'FROUDE KRYLOV + DIFFRACTION FORCES - VARIATION WITH WAVE DIRECTION' in line:
                 self.addedMassInd.append(i)
-                
-            
-                
-                
-    
+
     def writeWecSimHydroData(self,bodyNumber=0):
         data = {}
-        data['waterDepth'] = self.waterDepth.copy()
+        data['waterDepth'] = self.waterDepth
         data['waveHeading'] = self.waveDir[bodyNumber]
         data['vol'] = self.volDisp[bodyNumber]
-        data['cg'] = self.cg[bodyNumber].copy()
-        self.periodAllBodies[bodyNumber].sort()
-        data['period'] = self.periodAllBodies[bodyNumber]
+        data['cg'] = self.cg[bodyNumber]
+        data['period'] = self.periodAllBodies[bodyNumber][::-1]
         data['linearHyroRestCoef'] = self.kMatrix[bodyNumber]
         data['fAddedMassZero'] = self.addedMassInfFreq[bodyNumber]
         data['fAddedMassInf'] = self.addedMassZeroFreq[bodyNumber]
-        amOut = np.zeros((6,6,int(self.numFreqs[bodyNumber])))  
-        radOut = np.zeros((6,6,int(self.numFreqs[bodyNumber]))) 
-        keys = self.addedMass[bodyNumber].keys()
-        keys.sort()
-        for j, freq in enumerate(keys):
-            amOut[:,:,j] = self.addedMass[bodyNumber][freq]
-            radOut[:,:,j] = self.radDamping[bodyNumber][freq]
-        data['fAddedMass'] = amOut
-        data['fDamping'] = radOut
-        data['fExtRe'] = np.fliplr(self.exRe[bodyNumber].transpose())
-        data['fExtIm'] = np.fliplr(self.exIm[bodyNumber].transpose())
-        data['fExtMag'] = np.fliplr(self.ex[bodyNumber].transpose())
-        data['fExtPhase'] = np.fliplr(self.exPhase[bodyNumber].transpose())
+        data['fAddedMass'] = self.addedMass[bodyNumber][:,:,::-1]
+        data['fDamping'] = self.addedMass[bodyNumber][:,:,::-1]
+        data['fExtRe'] = self.exRe[bodyNumber][::-1,:].transpose()
+        data['fExtIm'] = self.exIm[bodyNumber][::-1,:].transpose()
+        data['fExtMag'] = self.exMag[bodyNumber][::-1,:].transpose()
+        data['fExtPhase'] = self.exPhase[bodyNumber][::-1,:].transpose()
+        
+        self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(bodyNumber) + '.mat'
         sio.savemat(self.files['wecSimHydroData'],data)
         
     def plotAddedMassAndDamping(self,body=0):
