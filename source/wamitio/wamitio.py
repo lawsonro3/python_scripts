@@ -38,7 +38,7 @@ class WamitOutput(object):
         self.radDampingAll = {}
         self.addedMassAndDampingRaw = {}
         self.files = {}
-        self.files['out'] = self.dir + os.path.sep + self.outFile
+        self.files['out'] = os.path.join(self.dir,self.outFile)
         self.readOutFile()
     
     def readOutFile(self):
@@ -100,9 +100,12 @@ class WamitOutput(object):
         Outputs:
             None
         '''
-        f, ax = plt.subplots(2, sharex=True)
+        
+        f, ax = plt.subplots(4, sharex=True)
         ax[0].plot()
         ax[1].plot()
+        ax[2].plot()
+        ax[3].plot()
         
         am = []
         rad = []
@@ -113,14 +116,24 @@ class WamitOutput(object):
         rad = np.array(rad)
         
         for i in xrange(3):
-            ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body))
+            ax[0].set_title('Added Mass for Body ' + str(body))
             ax[0].plot(self.freq,am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
             ax[0].set_ylabel('Added Mass (kg)')
             ax[1].plot(self.freq,rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-            ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body))
-            ax[1].set_xlabel('Wave Frequency (rad/s)')
-            ax[1].set_ylabel('Radiation Damping (N-s/m')
+            ax[1].set_title('Radiation Damping for Body ' + str(body))
+#            ax[1].set_xlabel('Wave Frequency (rad/s)')
+            ax[1].set_ylabel('Radiation Damping (N-s/m)')
             ax[1].legend(loc=0)
+        
+        for i in xrange(3):
+            ax[2].set_title('Added Mass for Body ' + str(body))
+            ax[2].plot(self.freq,am[:,i+3],'x-',label='Component (' + str(i+4) + ', ' + str(i+4) + ')')
+            ax[2].set_ylabel('Added Mass (kg-m^2)')
+            ax[3].plot(self.freq,rad[:,i+3],'x-',label='Component (' + str(i+4) + ', ' + str(i+4) + ')')
+            ax[3].set_title('Radiation Damping for Body ' + str(body))
+            ax[3].set_xlabel('Wave Frequency (rad/s)')
+            ax[3].set_ylabel('Radiation Damping (N-m-s/rad)')
+            ax[3].legend(loc=0)
             
         plt.show()
 #            
