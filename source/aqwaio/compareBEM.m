@@ -1,12 +1,12 @@
 clc; clear all; close all;
 
-c = load('./aqwa.mat');
+c = load('./aqwa-manually-generated.mat');
 c = c.hydroData(1); % take first body only
 c.fExtRe = c.fExt.Re;
 c.fExtMag = c.fExt.Mag;
 c.fExtIm = c.fExt.Im;
 
-m = load('./aqwa-data-wecSimHydroData1.mat');
+m = load('./aqwa-example-data-wecSimHydroData1.mat');
 
 i = 1;
 plot(c.period,c.fExtMag(i,:),'o-'); hold on

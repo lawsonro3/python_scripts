@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Jan 15 10:42:54 2015
 
@@ -6,17 +5,16 @@ Created on Thu Jan 15 10:42:54 2015
 """
 import aqwaio as aio
 import matplotlib.pyplot as plt
-
 plt.close('all')
 
-aq = aio.AqwaOutput(directory='./',outFile='aqwa-data.lis')
+# Load AQWA output data file
+aq = aio.AqwaOutput(directory='./',outFile='aqwa-example-data.lis')
 
-#aq.plotAddedMassAndDamping(body=0)
-#aq.plotAddedMassAndDamping(body=1)
-#aq.plotAddedMassAndDamping(body=2)
+# Plot diag components of added mass and damping
+aq.plotAddedMassAndDamping()
 
-aq.writeWecSimHydroData(bodyNumber=0)
-aq.writeWecSimHydroData(bodyNumber=1)
-aq.writeWecSimHydroData(bodyNumber=2)
+# Write hydrodynamic data for WEC-Sim
+aq.writeWecSimHydroData()
 
+# Write hydrodynamic data to HDF5 file format
 aq.writeHdf5()

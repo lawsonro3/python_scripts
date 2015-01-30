@@ -9,7 +9,6 @@ import numpy as np
 from astropy.io import ascii
 import matplotlib.pyplot as plt
 import scipy.io as sio
-import h5py
 
 class AqwaOutput(object):
     '''
@@ -65,7 +64,6 @@ class AqwaOutput(object):
         self.waveDir = {}
 
         self.readOutFile()
-#        self.writeHdf5()
 
     def readOutFile(self):
         
@@ -203,8 +201,15 @@ class AqwaOutput(object):
                         self.exRe[bodNum2] = self.exMag[bodNum2]*np.cos(np.deg2rad(self.exPhase[bodNum2]))
                         self.exIm[bodNum2]  = self.exMag[bodNum2]*np.sin(np.deg2rad(self.exPhase[bodNum2]))
                         bodNum2 += 1
+                    
+                    
                         
     def writeHdf5(self):
+        try:
+            import h5py
+        except:
+            raise Exception('The h5py module must be installed to used the writeHdf5 functionality.')
+            
         with h5py.File(self.files['hdf5'], "w") as f:        
             for i in range(self.numBodies):
                 
@@ -218,7 +223,6 @@ class AqwaOutput(object):
                 
                 cg = f.create_dataset('body' + str(i) + '/centerOfGravity',data=self.cg[i])
                 cb = f.create_dataset('body' + str(i) + '/centerOfBuoyancy',data=self.cb[i])
-                vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=self.volDisp[i])
                 
                 exMag = f.create_dataset('body' + str(i) + '/excitationForce/magnitude',data=self.exMag[i])
                 
@@ -236,21 +240,37 @@ class AqwaOutput(object):
                 am.attrs['units for translational degrees of freedom'] = 'kg'                
                 am.attrs['units for rotational degrees of freedom'] = 'kg-m^2'
                 
+                for m in xrange(6):
+                    for n in xrange(6):
+                        amComp = f.create_dataset('body' + str(i) + '/addedMassCoefficients/components/' + str(m) + ',' + str(n),data=self.addedMass[i][m,n,:])
+                        radComp = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/components/' + str(m) + ',' + str(n),data=self.radDamping[i][m,n,:])
+                
                 rad = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/discreteFeqs',data=self.radDamping[i])
                 
                 wDepth = f.create_dataset('body' + str(i) + '/waterDepth',data=self.waterDepth)
                 wDepth.attrs['units'] = 'm'
                 
+                waveHead = f.create_dataset('body' + str(i) + '/waveDirection',data=np.deg2rad(self.waveDir[i]))
+                waveHead.attrs['units'] = 'rad'
                 
+                vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=self.volDisp[i])
+                vol.attrs['units'] = 'm^3'
                 
-    def cutFile1(self):
-        self.hydroParmInd = []
-        self.addedMassInd = []
-        for i, line in enumerate(self.outRaw):
-            if '* * * * H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   S T R U C T U R E   1 * * * *' in line:
-                self.hydroParmInd.append(i) 
-            if 'FROUDE KRYLOV + DIFFRACTION FORCES - VARIATION WITH WAVE DIRECTION' in line:
-                self.addedMassInd.append(i)
+                den = f.create_dataset('body' + str(i) + '/fluidDnsity',data=self.density)
+                den.attrs['units'] = 'kg/m^3'
+                
+                g = f.create_dataset('body' + str(i) + '/gravity',data=self.density)
+                g.attrs['units'] = 'm/s^2'
+                
+
+#    def cutFile1(self):
+#        self.hydroParmInd = []
+#        self.addedMassInd = []
+#        for i, line in enumerate(self.outRaw):
+#            if '* * * * H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   S T R U C T U R E   1 * * * *' in line:
+#                self.hydroParmInd.append(i) 
+#            if 'FROUDE KRYLOV + DIFFRACTION FORCES - VARIATION WITH WAVE DIRECTION' in line:
+#                self.addedMassInd.append(i)
 
     def writeWecSimHydroData(self):
         for i in range(self.numBodies):
@@ -273,38 +293,29 @@ class AqwaOutput(object):
             self.files['wecSimHydroData'] = self.dir + os.path.sep + self.outFile[0:-4] + '-wecSimHydroData' + str(i) + '.mat'
             sio.savemat(self.files['wecSimHydroData'],data)
         
-    def plotAddedMassAndDamping(self,body=0):
+    def plotAddedMassAndDamping(self):
         '''
         Function to plot the diagional component of added mass and raditation
-        dampint
+        damping - this could be singificantly improved
         Inputs:
             None
         Outputs:
             None
         '''
-        f, ax = plt.subplots(2, sharex=True)
-        ax[0].plot()
-        ax[1].plot()
-        
-        am = []
-        rad = []
-        for i,freq in enumerate(self.freq):
-            am.append(self.addedMassDiag[body][freq])
-            rad.append(self.radDampingDiag[body][freq])
-        am = np.array(am)
-        rad = np.array(rad)
-        
-        for i in xrange(3):
-            ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body))
-            ax[0].plot(self.freq,am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-            ax[0].set_ylabel('Added Mass (kg)')
-            ax[1].plot(self.freq,rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-            ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body))
-            ax[1].set_xlabel('Wave Frequency (rad/s)')
-            ax[1].set_ylabel('Radiation Damping (N-s/m)')
-            ax[1].legend(loc=0)
+        for body in xrange(self.numBodies)  :
             
-        plt.show()
+            f, ax = plt.subplots(2, sharex=True)
+            ax[0].plot()
+            ax[1].plot()
             
-class WamitInput(object):
-    pass
+            for i in xrange(3):
+                ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body))
+                ax[0].plot(self.freq,self.addedMass[body][i,i,:],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+                ax[0].set_ylabel('Added Mass (kg)')
+                ax[1].plot(self.freq,self.radDamping[body][i,i,:],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
+                ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body))
+                ax[1].set_xlabel('Wave Frequency (rad/s)')
+                ax[1].set_ylabel('Radiation Damping (N-s/m)')
+                ax[1].legend(loc=0)
+                
+            plt.show()
