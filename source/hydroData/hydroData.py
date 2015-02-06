@@ -7,41 +7,40 @@ Created on Fri Jan 23 10:50:35 2015
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
-
+    
 class HydrodynamicCoefficients(object):
     def __init__(self):
-        self.all = np.array([])
-        self.infFreq = np.array([])
-        self.zeroFreq = np.array([])
+        self.all        = np.array([])
+        self.infFreq    = np.array([])
+        self.zeroFreq   = np.array([])
 
 class HydrodynamicExcitation(object):
     def __init__(self):
-        self.re = {}
-        self.im = {}
-        self.mag = {}
-        self.phase = {}
+        self.re         = np.array([])
+        self.im         = np.array([])
+        self.mag        = np.array([])
+        self.phase      = np.array([])
         
 class HydrodynamicData(object):
     def __init__(self):
-        self.density = None
-        self.gravity = None      
+        self.rho = None
+        self.g = None      
         self.files = {}
         self.nBodies = 0                    # Number of bodies in simulation
-        self.bodyName = {}                	 # Names of bodies
         self.cg = {}                        # Center of gravity
-        self.cb = {}                       # Center of buoyancy
+        self.cb = {}                        # Center of buoyancy
         self.volDisp = {}                   # Volume displacement
         self.T = {}                         # Wave period
         self.w = {}                         # Wave freq
-        self.am = HydrodynamicCoefficients()                        # Added mass 
-        self.rd = HydrodynamicCoefficients()                        # Radiation damping
+        self.am = HydrodynamicCoefficients()# Added mass 
+        self.rd = HydrodynamicCoefficients()# Radiation damping
         self.wpArea = {}                    # Water plane area          
         self.buoyForce = {}                 # Buoyanch force at equelibrium
         self.k = {}                         # Hydrostatic stifness matrix
         self.ex = HydrodynamicExcitation()  # Excitation coeffs
-        self.waterDepth = None
-        self.waveDir = {}
-        self.name = None
+        self.waterDepth = None              # Water depth
+        self.waveDir = {}                   # Wave direction
+        self.name = None                    # Name of the body
         
 def writeHdf5(data,outFile):
         try:
@@ -87,8 +86,8 @@ def writeHdf5(data,outFile):
                 am.attrs['units for translational degrees of freedom'] = 'kg'                
                 am.attrs['units for rotational degrees of freedom'] = 'kg-m^2'
                 
-                for m in xrange(6):
-                    for n in xrange(6):
+                for m in xrange(np.shape(data[i].am.all)[0]):
+                    for n in xrange(np.shape(data[i].am.all)[1]):
                         amComp = f.create_dataset('body' + str(i) + '/addedMassCoefficients/components/' + str(m) + ',' + str(n),data=data[i].am.all[m,n,:])
                         amComp.attrs['units'] = ''
 
@@ -101,16 +100,18 @@ def writeHdf5(data,outFile):
                 wDepth = f.create_dataset('body' + str(i) + '/waterDepth',data=data[i].waterDepth)
                 wDepth.attrs['units'] = 'm'
                 
-                waveHead = f.create_dataset('body' + str(i) + '/waveDirection',data=np.deg2rad(data[i].waveDir))
-                waveHead.attrs['units'] = 'rad'
+                try:
+                    waveHead = f.create_dataset('body' + str(i) + '/waveDirection',data=np.deg2rad(data[i].waveDir))
+                    waveHead.attrs['units'] = 'rad'
+                except:
+                    pass
+                
                 
                 vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=data[i].volDisp)
                 vol.attrs['units'] = 'm^3'
+
                 
-                den = f.create_dataset('body' + str(i) + '/fluidDnsity',data=data[i].density)
-                den.attrs['units'] = 'kg/m^3'
-                
-                g = f.create_dataset('body' + str(i) + '/gravity',data=data[i].density)
+                g = f.create_dataset('body' + str(i) + '/gravity',data=data[i].g)
                 g.attrs['units'] = 'm/s^2'
     
 def writeWecSimHydroData(data,outFile):
@@ -147,13 +148,13 @@ def plotAddedMassAndDamping(data,components):
         
         f, ax = plt.subplots(2, sharex=True)
         ax[0].plot()
-        ax[0].set_title('Diagional Compinent of Added Mass Matrix for Body ' + str(body) + ':' + str(data[body].name))    
-        ax[0].set_ylabel('Added Mass (kg)')
+        ax[0].set_title('Added mass for body ' + str(body) + ': ' + str(data[body].name))    
+        ax[0].set_ylabel('Added Mass')
         
         ax[1].plot()
-        ax[1].set_title('Diagional Compinent of Radiation Damping Matrix for Body ' + str(body) + ':' + str(data[body].name))
+        ax[1].set_title('Radiation damping body ' + str(body) + ': ' + str(data[body].name))
         ax[1].set_xlabel('Wave Frequency (rad/s)')
-        ax[1].set_ylabel('Radiation Damping (N-s/m)')
+        ax[1].set_ylabel('Radiation Damping')
         
         for i,comp in enumerate(components):
             
@@ -163,11 +164,9 @@ def plotAddedMassAndDamping(data,components):
             rd = data[body].rd.all[x,y,:]
             am = data[body].am.all[x,y,:]
 
+            ax[0].plot(w,am,'x-',label='Component (' + str(x) + ', ' + str(y) + ')')
+            ax[1].plot(w,rd,'x-',label='Component (' + str(x) + ', ' + str(y) + ')')
             
-            
-            ax[0].plot(w,am,'x-',label='Component (' + str(x+1) + ', ' + str(y+1) + ')')
-            ax[1].plot(w,rd,'x-',label='Component (' + str(x+1) + ', ' + str(y+1) + ')')
-            
-            ax[1].legend(loc=0)
+            ax[0].legend(loc=0)
                 
             plt.show()

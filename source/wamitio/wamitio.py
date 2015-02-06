@@ -7,7 +7,7 @@ Created on Mon Nov 17 17:51:21 2014
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import collections
+import hydroData as hd
 
 class WamitOutput(object):
     '''
@@ -20,26 +20,19 @@ class WamitOutput(object):
         None
     '''
     def __init__(self,directory,outFile):
-        self.density = 1000.0
-        self.gravity = 9.81 
+
         self.dir = directory
-        self.outFile = outFile
+        
+        self.density = 1000.
 
-
-        self.numBodies = 0
-        self.bodyNames = {}
-        self.bodyPos = {}
-        self.period = []
-        self.addedMass = {}
-        self.addedMassDiag = {}
-        self.addedMassAll = {}
-        self.radDamping = {}
-        self.radDampingDiag = {}
-        self.radDampingAll = {}
-        self.addedMassAndDampingRaw = {}
         self.files = {}
-        self.files['out'] = os.path.join(self.dir,self.outFile)
+        self.files['out'] = os.path.join(self.dir,outFile)
+        self.files['hdf5'] = self.files['out'][:-4] + '.h5'
+        self.files['wecSim'] = self.files['out'][:-4]
+        self.data = {}
         self.readOutFile()
+
+
     
     def readOutFile(self):
         '''
@@ -50,106 +43,225 @@ class WamitOutput(object):
             None
         '''
         with open(self.files['out'],'r') as fid:
-            self.wamitOutRaw = fid.readlines()
+
+            wamitOut = fid.readlines()
    
-        for i, line in enumerate(self.wamitOutRaw):
-            if "Input from Geometric Data File:" in line:
-                self.numBodies = 1
-                self.bodyNames[self.numBodies-1] = 'body'
-            if "Input from Geometric Data Files:" in line:
-                for j in xrange(20): # look for bodies within the next 20 lines
-                    if "N=" in self.wamitOutRaw[i+j]:
-                        self.numBodies += 1
-                        self.bodyNames[self.numBodies-1] = self.wamitOutRaw[i+j].split()[-1]
-            count = 0 # Counter for bodies
-            if " Body number: N=" in line:
-                count += 1
-                for j in xrange(20): # look for position within the next 20 lines - will only work for wamit files of about 5 bodies
-                    if 'XBODY =' in self.wamitOutRaw[i+j]:
-                        position = []
-                        position.append(self.wamitOutRaw[i+j].split()[2])
-                        position.append(self.wamitOutRaw[i+j].split()[5])
-                        position.append(self.wamitOutRaw[i+j].split()[8])
-                        self.bodyPos[count] = position
-            if "Wave period = infinite" in line:
-                self.addedMassInf  = self.wamitOutRaw[i+7:i+7+(6*self.numBodies)**2+1]
-            if "Wave period = zero" in line:
-                self.addedMassZero = self.wamitOutRaw[i+7:i+7+(6*self.numBodies)**2+1]
-            if "Wave period (sec)" in line:
-                self.period.append(self.wamitOutRaw[i].split()[4])
-                tempFreq = 2.*np.pi/np.float(self.wamitOutRaw[i].split()[4])
-                self.addedMassAndDampingRaw[tempFreq] = self.wamitOutRaw[i+7:i+7+(6*self.numBodies)**2]
-        self.period = np.array(self.period).astype(float)   
-        self.freq = 2.*np.pi/self.period
-        self.numFreqs = np.size(self.freq)
-        for i,freq in enumerate(self.freq):
-            self.addedMassAll[freq]  =  np.array([str(self.addedMassAndDampingRaw[freq][temp]).split()[2] for temp in xrange((6*self.numBodies)**2)]).astype(float).reshape(6*self.numBodies,6*self.numBodies)*self.density
-            self.radDampingAll[freq] =  np.array([str(self.addedMassAndDampingRaw[freq][temp]).split()[3] for temp in xrange((6*self.numBodies)**2)]).astype(float).reshape(6*self.numBodies,6*self.numBodies)*self.density*self.freq[i]
-        for nb in xrange(self.numBodies):
-            addedMass = {}
-            radDamping = {}
-            addedMassDiag = {}
-            radDampingDiag = {}
-            for j,freq in enumerate(self.freq):
-                addedMass[freq]  = self.addedMassAll[freq][nb*6:nb*6+6]
-                radDamping[freq] = self.radDampingAll[freq][nb*6:nb*6+6]
-                addedMassDiag[freq] = np.diag(addedMass[freq][:,nb*6:nb*6+6])
-                radDampingDiag[freq] = np.diag(radDamping[freq][:,nb*6:nb*6+6])
-            self.addedMass[nb] = addedMass
-            self.radDamping[nb] = radDamping
-            self.addedMassDiag[nb] = addedMassDiag
-            self.radDampingDiag[nb] = radDampingDiag
+        nBodies = 0 # Total number of bodies
+        bodCount = 0 # Counter for bodies
+        freqCount = 0
+        T = []
+        cg = {}
+        cb = {}
+        name = {}    
+        volDisp = {}
+        k = {}
+        pos = {}
         
-    def plotAddedMassAndDamping(self,bodyToPlot=None):
-        '''
-        Function to plot the diagional component of added mass and raditation
-        dampint
-        Inputs:
-            None
-        Outputs:
-            None
-        '''
-        if bodyToPlot is None:
-            bodyToPlot = self.numBodies
-        else:
-            bodyToPlot = bodyToPlot+1
+        for i, line in enumerate(wamitOut):
+
+            # Read gravity and density
+            if 'Gravity:' in line:
+                gravity = wamitOut[i].split()[1]
+                gravity = np.float(gravity)
             
-        for body in xrange(bodyToPlot):
-            f, ax = plt.subplots(4, sharex=True)
-            ax[0].plot()
-            ax[1].plot()
-            ax[2].plot()
-            ax[3].plot()
+            if 'Water depth:' in line:
+                waterDepth = wamitOut[i].split()[2]
+                waterDepth = np.float(waterDepth)
+
+            # If there is one body in the WAMIT run
+            if "Input from Geometric Data File:" in line:
+
+                nBodies = 1
+                name[0] = 'body'
+
+
             
-            am = []
-            rad = []
-            for i,freq in enumerate(self.freq):
-                am.append(self.addedMassDiag[body][freq])
-                rad.append(self.radDampingDiag[body][freq])
-            am = np.array(am)
-            rad = np.array(rad)
-            
-            for i in xrange(3):
-                ax[0].set_title('Added Mass for Body ' + str(body))
-                ax[0].plot(self.freq,am[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-                ax[0].set_ylabel('Added Mass (kg)')
-                ax[1].plot(self.freq,rad[:,i],'x-',label='Component (' + str(i+1) + ', ' + str(i+1) + ')')
-                ax[1].set_title('Radiation Damping for Body ' + str(body) + ':' + self.bodyNames[body])
-    #            ax[1].set_xlabel('Wave Frequency (rad/s)')
-                ax[1].set_ylabel('Radiation Damping (N-s/m)')
-                ax[1].legend(loc=0)
-            
-            for i in xrange(3):
-                ax[2].set_title('Added Mass for Body ' + str(body))
-                ax[2].plot(self.freq,am[:,i+3],'x-',label='Component (' + str(i+4) + ', ' + str(i+4) + ')')
-                ax[2].set_ylabel('Added Mass (kg-m^2)')
-                ax[3].plot(self.freq,rad[:,i+3],'x-',label='Component (' + str(i+4) + ':' + str(i+4) + ')')
-                ax[3].set_title('Radiation Damping for Body ' + str(body) + ':' + self.bodyNames[body])
-                ax[3].set_xlabel('Wave Frequency (rad/s)')
-                ax[3].set_ylabel('Radiation Damping (N-m-s/rad)')
-                ax[3].legend(loc=0)
+            # If there are two bodies in the WAMIT run
+            if "Input from Geometric Data Files:" in line:
+
+                for j in xrange(20): # look for bodies within the next 20 lines
+
+                    if "N=" in wamitOut[i+j]:
+
+                        nBodies += 1
+                        name[nBodies-1] = wamitOut[i+j].split()[-1]
+
+
+
+            # Read the body positions
+            if " Body number: N=" in line:
+
+                for j in xrange(20): # look for position within the next 20 lines - will only work for wamit files of about 5 bodies
+
+                    if 'XBODY =' in wamitOut[i+j]:
+
+                        temp = wamitOut[i+j].split()
+                        pos[bodCount] = np.array([temp[2],temp[5],temp[8]]).astype(float)
+                        
+                    if 'Volumes (VOLX,VOLY,VOLZ):' in wamitOut[i+j]:
+
+                        temp = wamitOut[i+j].split()
+                        volDisp[bodCount] = np.array([temp[-3],temp[-2],temp[-1]]).astype(float)
+                        
+                    if 'Center of Buoyancy (Xb,Yb,Zb):' in wamitOut[i+j]:
+
+                        temp = wamitOut[i+j].split()
+                        cb[bodCount] = np.array([temp[-3],temp[-2],temp[-1]]).astype(float)
+                        
+                    if 'C(3,3),C(3,4),C(3,5):' in wamitOut[i+j]:
+
+                        temp = np.zeros([6,6])
+                        temp2 = wamitOut[i+j].split()
+                        temp[2,2] = np.float(temp2[1])
+                        temp[2,3] = np.float(temp2[2])
+                        temp[2,4] = np.float(temp2[3])
+                        
+                        temp2 = wamitOut[i+j+1].split()
+                        temp[3,3] = np.float(temp2[1])
+                        temp[3,4] = np.float(temp2[2])
+                        temp[3,5] = np.float(temp2[3])
+                        
+                        temp2 = wamitOut[i+j+2].split()
+                        temp[4,4] = np.float(temp2[1])
+                        temp[4,5] = np.float(temp2[2])
+                        
+                        k[bodCount] = temp
+                        
+                    if 'Center of Gravity  (Xg,Yg,Zg):' in wamitOut[i+j]:
+                            
+                        temp = wamitOut[i+j].split()
+                        cg[bodCount] = np.array([temp[-3],temp[-2],temp[-1]]).astype(float)                                                
+                        
+                        
+                bodCount += 1      
+
+
                 
-            plt.show()
-#            
-class WamitInput(object):
-    pass
+            # Inf freq added mass
+            if "Wave period = zero" in line:
+                
+                amInf  = wamitOut[i+7:i+7+(6*nBodies)**2]
+                amInf = np.array([amInf[temp].split()[2] for temp in xrange(np.size(amInf))]).astype(float)
+                amInf = amInf.reshape(6*nBodies,6*nBodies)
+
+
+                
+            # Zero freq added mass
+            if "Wave period = infinite" in line:
+                
+                amZero = wamitOut[i+7:i+7+(6*nBodies)**2]
+                amZero = np.array([amZero[temp].split()[2] for temp in xrange(np.size(amZero))]).astype(float)
+                amZero = amZero.reshape(6*nBodies,6*nBodies)
+
+            # Added mass and damping
+            if "Wave period (sec)" in line:
+                
+                T.append(wamitOut[i].split()[4])
+                
+                am = wamitOut[i+7:i+7+(6*nBodies)**2]
+                am = np.array([am[temp].split()[2] for temp in xrange(np.size(am))]).astype(float)
+                am = am.reshape(6*nBodies,6*nBodies,1)
+                
+                rad = wamitOut[i+7:i+7+(6*nBodies)**2]
+                rad = np.array([rad[temp].split()[3] for temp in xrange(np.size(rad))]).astype(float)
+                rad = rad.reshape(6*nBodies,6*nBodies,1)
+                
+                ex = wamitOut[i+17+(6*nBodies)**2:i+17+(6*nBodies)**2+6*nBodies]
+                ex = np.array([ex[temp].split()[1] for temp in xrange(np.size(ex))]).astype(float)
+                ex = ex.reshape(1,6*nBodies)  
+                
+                phase = wamitOut[i+17+(6*nBodies)**2:i+17+(6*nBodies)**2+6*nBodies]
+                phase = np.array([phase[temp].split()[2] for temp in xrange(np.size(phase))]).astype(float)
+                phase = phase.reshape(1,6*nBodies)  
+
+                if freqCount is 0:
+
+                    amAll = am
+                    radAll = rad
+                    exAll = ex
+                    phaseAll = phase
+                    
+                    freqCount = 1
+
+                else:
+
+                    amAll = np.append(amAll,am,axis=2)
+                    radAll = np.append(radAll,rad,axis=2)
+                    exAll = np.append(exAll,ex,axis=0)
+                    phaseAll = np.append(phaseAll,ex,axis=0)
+                    
+        T = np.array(T).astype(float)
+                    
+                
+
+        for i in xrange(nBodies):       
+            self.data[i] = hd.HydrodynamicData() 
+            self.data[i].name = name[i]
+            self.data[i].g = gravity
+            self.data[i].waterDepth = waterDepth
+            self.data[i].rho = self.density            
+            self.data[i].nBodies = nBodies
+            self.data[i].cg = cg[i]
+            self.data[i].cb = cb[i]
+            self.data[i].k = k[i]
+            self.data[i].pos = pos[i]
+            self.data[i].volDisp = volDisp[i]
+            
+            self.data[i].am.infFreq = amInf[6*i:6+6*i,:]
+            self.data[i].am.infFreq = self.data[i].am.infFreq*self.density
+
+            self.data[i].am.zeroFreq = amZero[6*i:6+6*i,:]
+            self.data[i].am.zeroFreq = self.data[i].am.zeroFreq*self.density
+            
+            self.data[i].T = T
+            self.data[i].w = 2.0*np.pi/self.data[i].T
+
+            self.data[i].am.all = amAll[6*i:6+6*i,:,:]
+            self.data[i].am.all = self.data[i].am.all*self.density
+            
+            self.data[i].rd.all = radAll[6*i:6+6*i,:,:]
+            for j in xrange(np.shape(self.data[i].rd.all)[2]):
+                self.data[i].rd.all[:,:,j] = self.data[i].rd.all[:,:,j]*self.density*self.data[i].w[j]
+                
+            self.data[i].ex.mag = exAll[:,6*i:6+6*i]
+            self.data[i].ex.phase = phaseAll[:,6*i:6+6*i]        
+            
+            
+
+#        T = np.array(T).astype(float)   
+#        w = 2.*np.pi/T
+#
+#        self.numFreqs = np.size(w)
+#        for i,freq in enumerate(self.freq):
+#            self.addedMassAll[freq]  =  np.array([str(self.amAndRad[freq][temp]).split()[2] for temp in xrange((6*nBodies)**2)]).astype(float).reshape(6*nBodies,6*nBodies)*self.density
+#            self.radDampingAll[freq] =  np.array([str(self.amAndRad[freq][temp]).split()[3] for temp in xrange((6*nBodies)**2)]).astype(float).reshape(6*nBodies,6*nBodies)*self.density*self.freq[i]
+#            self.exMagAll.append(np.array([str(exMagTemp[freq][temp]).split()[1] for temp in xrange((6*nBodies))]).astype(float))
+#            self.exPhaseAll.append(np.array([str(exMagTemp[freq][temp]).split()[2] for temp in xrange((6*nBodies))]).astype(float))
+#        self.exMagAll = np.array(self.exMagAll)
+#        self.exPhaseAll = np.array(self.exPhaseAll)
+#        for nb in xrange(nBodies):
+#            addedMass = {}
+#            radDamping = {}
+#            addedMassDiag = {}
+#            radDampingDiag = {}
+#            for j,freq in enumerate(self.freq):
+#                addedMass[freq]  = self.addedMassAll[freq][nb*6:nb*6+6]
+#                radDamping[freq] = self.radDampingAll[freq][nb*6:nb*6+6]
+#                addedMassDiag[freq] = np.diag(addedMass[freq][:,nb*6:nb*6+6])
+#                radDampingDiag[freq] = np.diag(radDamping[freq][:,nb*6:nb*6+6])
+#                self.data[nb].ex.mag = self.exMagAll[:,nb*6:nb*6+6]
+#                self.data[nb].ex.phase = self.exPhaseAll[:,nb*6:nb*6+6]
+#            self.addedMass[nb] = addedMass
+#            self.radDamping[nb] = radDamping
+#            self.addedMassDiag[nb] = addedMassDiag
+#            self.radDampingDiag[nb] = radDampingDiag
+
+    def writeWecSimHydroData(self):
+        hd.writeWecSimHydroData(self.data,self.files['wecSim'])    
+        
+    def writeHdf5(self):
+        hd.writeHdf5(self.data,self.files['hdf5'])
+        
+    def plotAddedMassAndDamping(self,components):
+        hd.plotAddedMassAndDamping(self.data,components)
+

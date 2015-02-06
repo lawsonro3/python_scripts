@@ -7,7 +7,6 @@ Created on Thu Jan 15 10:42:54 2015
 import os
 import numpy as np
 from astropy.io import ascii
-import matplotlib.pyplot as plt
 import hydroData as hd
 
 class AqwaOutput(object):
@@ -31,9 +30,6 @@ class AqwaOutput(object):
         self.data = {}        
         
         self.nBodies = 0
-        self.gravity = None
-        self.density = None
-        self.waterDepth = None
  
         self.readOutFile()
         
@@ -49,9 +45,9 @@ class AqwaOutput(object):
         
         for i, line in enumerate(self.outRaw):
             if 'WATER  DEPTH  . . . . . . . . . . . . . . . . =' in line:
-                self.waterDepth = np.array(self.outRaw[i].split())[-1].astype(float)
-                self.density = np.array(self.outRaw[i+2].split())[-1].astype(float)
-                self.gravity = np.array(self.outRaw[i+4].split())[-1].astype(float)
+                waterDepth = np.array(self.outRaw[i].split())[-1].astype(float)
+                density = np.array(self.outRaw[i+2].split())[-1].astype(float)
+                gravity = np.array(self.outRaw[i+4].split())[-1].astype(float)
             if '1. STIFFNESS MATRIX AT THE CENTRE OF GRAVITY' in line:
                 self.data[self.nBodies] = hd.HydrodynamicData()
                 cob = []                
@@ -62,9 +58,9 @@ class AqwaOutput(object):
                 cob.append(np.array(self.outRaw[i+16].split())[-1].astype(float))
                 self.data[self.nBodies].cb = np.array(cob)
                 self.data[self.nBodies].wpArea = np.array(self.outRaw[i+19].split())[-1].astype(float)
-                self.data[self.nBodies].waterDepth = self.waterDepth
-                self.data[self.nBodies].gravity = self.gravity 
-                self.data[self.nBodies].density = self.gravity 
+                self.data[self.nBodies].waterDepth = waterDepth
+                self.data[self.nBodies].g = gravity 
+                self.data[self.nBodies].rho = density
                 self.nBodies += 1
             
             if 'AT THE FREE-FLOATING EQUILIBRIUM POSITION' in line:
