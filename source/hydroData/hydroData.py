@@ -7,6 +7,7 @@ Created on Fri Jan 23 10:50:35 2015
 import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
+plt.interactive(True)
     
 class HydrodynamicCoefficients(object):
     def __init__(self):
@@ -39,7 +40,7 @@ class HydrodynamicData(object):
         self.k = {}                         # Hydrostatic stifness matrix
         self.ex = HydrodynamicExcitation()  # Excitation coeffs
         self.waterDepth = None              # Water depth
-        self.waveDir = {}                   # Wave direction
+        self.waveDir = 0                   # Wave direction
         self.name = None                    # Name of the body
         
 def writeHdf5(data,outFile):
@@ -79,33 +80,30 @@ def writeHdf5(data,outFile):
                 exIm.attrs['units'] = ''
 
                 # Write added mass information                
-                amInf = f.create_dataset('body' + str(i) + '/addedMassCoefficients/infFreq',data=data[i].am.infFreq)
+                amInf = f.create_dataset('body' + str(i) + '/addedMass/infFreq',data=data[i].am.infFreq)
                 amInf.attrs['units for translational degrees of freedom'] = 'kg'
                 
-                am = f.create_dataset('body' + str(i) + '/addedMassCoefficients/discreteFeqs',data=data[i].am.all)
+                am = f.create_dataset('body' + str(i) + '/addedMass/all',data=data[i].am.all)
                 am.attrs['units for translational degrees of freedom'] = 'kg'                
                 am.attrs['units for rotational degrees of freedom'] = 'kg-m^2'
                 
                 for m in xrange(np.shape(data[i].am.all)[0]):
                     for n in xrange(np.shape(data[i].am.all)[1]):
-                        amComp = f.create_dataset('body' + str(i) + '/addedMassCoefficients/components/' + str(m) + ',' + str(n),data=data[i].am.all[m,n,:])
+                        amComp = f.create_dataset('body' + str(i) + '/addedMass/components/' + str(m) + ',' + str(n),data=data[i].am.all[m,n,:])
                         amComp.attrs['units'] = ''
 
-                        radComp = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/components/' + str(m) + ',' + str(n),data=data[i].rd.all[m,n,:])
+                        radComp = f.create_dataset('body' + str(i) + '/radiationDamping/components/' + str(m) + ',' + str(n),data=data[i].rd.all[m,n,:])
                         radComp.attrs['units'] = ''
                 
-                rad = f.create_dataset('body' + str(i) + '/radiationDampingCoefficients/discreteFeqs',data=data[i].rd.all)
+                rad = f.create_dataset('body' + str(i) + '/radiationDamping/all',data=data[i].rd.all)
                 rad.attrs['units'] = ''
+                rad.attrs['discription'] = ''
                 
                 wDepth = f.create_dataset('body' + str(i) + '/waterDepth',data=data[i].waterDepth)
                 wDepth.attrs['units'] = 'm'
-                
-                try:
-                    waveHead = f.create_dataset('body' + str(i) + '/waveDirection',data=np.deg2rad(data[i].waveDir))
-                    waveHead.attrs['units'] = 'rad'
-                except:
-                    pass
-                
+
+                waveHead = f.create_dataset('body' + str(i) + '/waveDirection',data=data[i].waveDir)
+                waveHead.attrs['units'] = 'rad'
                 
                 vol = f.create_dataset('body' + str(i) + '/displacedVolume',data=data[i].volDisp)
                 vol.attrs['units'] = 'm^3'
@@ -113,6 +111,11 @@ def writeHdf5(data,outFile):
                 
                 g = f.create_dataset('body' + str(i) + '/gravity',data=data[i].g)
                 g.attrs['units'] = 'm/s^2'
+                
+                rho = f.create_dataset('body' + str(i) + '/density',data=data[i].rho)
+                rho.attrs['units'] = 'kg/m^3'
+                
+            print 'Wrote HDF5 data to' + outFile
     
 def writeWecSimHydroData(data,outFile):
         for i in range(np.size(data.keys())):
@@ -126,7 +129,7 @@ def writeWecSimHydroData(data,outFile):
             out['linearHyroRestCoef'] = curData.k
             out['fAddedMassZero'] = curData.am.infFreq
             out['fAddedMass'] = curData.am.all[:,:,::-1]
-            out['fDamping'] = curData.am.all[:,:,::-1]
+            out['fDamping'] = curData.rd.all[:,:,::-1]
             out['fExtRe'] = curData.ex.re[::-1,:].transpose()
             out['fExtIm'] = curData.ex.im[::-1,:].transpose()
             out['fExtMag'] = curData.ex.mag[::-1,:].transpose()
@@ -134,6 +137,7 @@ def writeWecSimHydroData(data,outFile):
             
             outFileName = outFile+'-body' + str(i) +'.mat'
             sio.savemat(outFileName,out)
+            print 'Wrote MATLAB output for WEC-Sim to ' + outFileName
             
 def plotAddedMassAndDamping(data,components):
     '''

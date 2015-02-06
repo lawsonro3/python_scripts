@@ -159,7 +159,7 @@ class AqwaOutput(object):
                                                        exAll[bodNum2].field(11)[m],
                                                        exAll[bodNum2].field(13)[m]]))
 
-                        self.data[bodNum2].waveDir = temp2                               
+                        self.data[bodNum2].waveDir = np.deg2rad(temp2)
                         self.data[bodNum2].ex.mag = np.array(exMag)
                         self.data[bodNum2].ex.phase = np.array(exPhase)
                         self.data[bodNum2].ex.re = self.data[bodNum2].ex.mag*np.cos(np.deg2rad(self.data[bodNum2].ex.phase))

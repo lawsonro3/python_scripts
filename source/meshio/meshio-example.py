@@ -4,6 +4,6 @@ import meshio as mio
 mesh = mio.readVtp('./NonSymmetrical.dat')
 
 # Write meshes
-mesh.writeVtp('./NonSymmetrical-demoOutput.vtp')
-mesh.writeNemohMesh('./NonSymmetrical-demoOutput.dat')
-mesh.writeGdf('./NonSymmetrical-demoOutput.gdf')
+#mesh.writeVtp('./NonSymmetrical-demoOutput.vtp')
+#mesh.writeNemohMesh('./NonSymmetrical-demoOutput.dat')
+#mesh.writeGdf('./NonSymmetrical-demoOutput.gdf')

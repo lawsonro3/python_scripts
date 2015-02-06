@@ -6,7 +6,6 @@ Created on Mon Nov 17 17:51:21 2014
 """
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 import hydroData as hd
 
 class WamitOutput(object):
@@ -190,7 +189,11 @@ class WamitOutput(object):
                     exAll = np.append(exAll,ex,axis=0)
                     phaseAll = np.append(phaseAll,ex,axis=0)
                     
+                    
         T = np.array(T).astype(float)
+        phaseAll = np.deg2rad(phaseAll)
+        exReAll = np.cos(phaseAll)*exAll
+        exImAll = np.sin(phaseAll)*exAll
                     
                 
 
@@ -224,44 +227,22 @@ class WamitOutput(object):
                 self.data[i].rd.all[:,:,j] = self.data[i].rd.all[:,:,j]*self.density*self.data[i].w[j]
                 
             self.data[i].ex.mag = exAll[:,6*i:6+6*i]
-            self.data[i].ex.phase = phaseAll[:,6*i:6+6*i]        
-            
-            
+            self.data[i].ex.phase = phaseAll[:,6*i:6+6*i]
+            self.data[i].ex.re = exReAll[:,6*i:6+6*i]
+            self.data[i].ex.im = exImAll[:,6*i:6+6*i]
 
-#        T = np.array(T).astype(float)   
-#        w = 2.*np.pi/T
-#
-#        self.numFreqs = np.size(w)
-#        for i,freq in enumerate(self.freq):
-#            self.addedMassAll[freq]  =  np.array([str(self.amAndRad[freq][temp]).split()[2] for temp in xrange((6*nBodies)**2)]).astype(float).reshape(6*nBodies,6*nBodies)*self.density
-#            self.radDampingAll[freq] =  np.array([str(self.amAndRad[freq][temp]).split()[3] for temp in xrange((6*nBodies)**2)]).astype(float).reshape(6*nBodies,6*nBodies)*self.density*self.freq[i]
-#            self.exMagAll.append(np.array([str(exMagTemp[freq][temp]).split()[1] for temp in xrange((6*nBodies))]).astype(float))
-#            self.exPhaseAll.append(np.array([str(exMagTemp[freq][temp]).split()[2] for temp in xrange((6*nBodies))]).astype(float))
-#        self.exMagAll = np.array(self.exMagAll)
-#        self.exPhaseAll = np.array(self.exPhaseAll)
-#        for nb in xrange(nBodies):
-#            addedMass = {}
-#            radDamping = {}
-#            addedMassDiag = {}
-#            radDampingDiag = {}
-#            for j,freq in enumerate(self.freq):
-#                addedMass[freq]  = self.addedMassAll[freq][nb*6:nb*6+6]
-#                radDamping[freq] = self.radDampingAll[freq][nb*6:nb*6+6]
-#                addedMassDiag[freq] = np.diag(addedMass[freq][:,nb*6:nb*6+6])
-#                radDampingDiag[freq] = np.diag(radDamping[freq][:,nb*6:nb*6+6])
-#                self.data[nb].ex.mag = self.exMagAll[:,nb*6:nb*6+6]
-#                self.data[nb].ex.phase = self.exPhaseAll[:,nb*6:nb*6+6]
-#            self.addedMass[nb] = addedMass
-#            self.radDamping[nb] = radDamping
-#            self.addedMassDiag[nb] = addedMassDiag
-#            self.radDampingDiag[nb] = radDampingDiag
+
 
     def writeWecSimHydroData(self):
         hd.writeWecSimHydroData(self.data,self.files['wecSim'])    
         
+        
+        
     def writeHdf5(self):
         hd.writeHdf5(self.data,self.files['hdf5'])
-        
+       
+       
+       
     def plotAddedMassAndDamping(self,components):
         hd.plotAddedMassAndDamping(self.data,components)
 
