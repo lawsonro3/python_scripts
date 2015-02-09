@@ -1,6 +1,6 @@
 #Metadata
-* author: Michael Lawson
-* date updated: 6 Feb 2015
+* Author: Michael Lawson
+* Date updated: 6 Feb 2015
 
 #This module provides the functionality to
 * Read hydrodynamic coefficients from WAMIT ".out" files

@@ -119,13 +119,22 @@ class PanelMesh(object):
         self.gdfOutFile = outputFile
                 
     def _writeGdf(self,fid):
-        fid.write('Mesh file written by meshio.py\n')
-        fid.write('1 9.80665       ULEN GRAV\n')
-        fid.write('0  0    ISX  ISY\n')
-        fid.write(str(self.numFaces) + '\n')
-        for i in xrange(self.numFaces):
-            for j,pId in enumerate(self.faces[i]):
-                fid.write(str(self.points[pId]).replace(',','').replace('[','').replace(']','') + '\n')
+        fid.write('Mesh file written by meshio.py')
+        fid.write('\n')
+        fid.write('1 9.80665       ULEN GRAV')
+        fid.write('\n')
+        fid.write('0  0    ISX  ISY')
+        fid.write('\n')
+        fid.write(str(self.numFaces))
+        fid.write('\n')
+        for i,face in enumerate(self.faces):
+            if np.size(face) is 4: # if the mesh element is a quad
+                for j,pointKey in enumerate(face):
+                    fid.write(str(self.points[pointKey]).replace(',','').replace('[','').replace(']','') + '\n')
+            if np.size(face) is 3: # if the mesh element is a tri
+                faceMod = np.append(face,face[-1])
+                for j,pointKey in enumerate(faceMod):
+                    fid.write(str(self.points[pointKey]).replace(',','').replace('[','').replace(']','') + '\n')
 
 def readGdf(fileName):
     '''
