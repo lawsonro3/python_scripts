@@ -28,6 +28,7 @@ class WamitOutput(object):
         self.files['out'] = os.path.join(self.dir,outFile)
         self.files['hdf5'] = self.files['out'][:-4] + '.h5'
         self.files['wecSim'] = self.files['out'][:-4]
+        self.files['plots'] = self.files['out'][:-4]
         self.data = {}
         self.readOutFile()
 
@@ -88,7 +89,7 @@ class WamitOutput(object):
 
 
             # Read the body positions
-            if " Body number: N=" in line:
+            if "Total panels:" in line:
 
                 for j in xrange(20): # look for position within the next 20 lines - will only work for wamit files of about 5 bodies
 
@@ -130,6 +131,7 @@ class WamitOutput(object):
                             
                         temp = wamitOut[i+j].split()
                         cg[bodCount] = np.array([temp[-3],temp[-2],temp[-1]]).astype(float)                                                
+                        del temp
                         
                         
                 bodCount += 1      
@@ -152,7 +154,7 @@ class WamitOutput(object):
                 amZero = np.array([amZero[temp].split()[2] for temp in xrange(np.size(amZero))]).astype(float)
                 amZero = amZero.reshape(6*nBodies,6*nBodies)
 
-            # Added mass and damping
+            # Added mass, damping, and excitation
             if "Wave period (sec)" in line:
                 
                 T.append(wamitOut[i].split()[4])
@@ -187,16 +189,12 @@ class WamitOutput(object):
                     amAll = np.append(amAll,am,axis=2)
                     radAll = np.append(radAll,rad,axis=2)
                     exAll = np.append(exAll,ex,axis=0)
-                    phaseAll = np.append(phaseAll,ex,axis=0)
-                    
-                    
+                    phaseAll = np.append(phaseAll,phase,axis=0)
+                                        
         T = np.array(T).astype(float)
-        phaseAll = np.deg2rad(phaseAll)
-        exReAll = np.cos(phaseAll)*exAll
-        exImAll = np.sin(phaseAll)*exAll
-                    
-                
 
+
+                    
         for i in xrange(nBodies):       
             self.data[i] = hd.HydrodynamicData() 
             self.data[i].name = name[i]
@@ -206,7 +204,7 @@ class WamitOutput(object):
             self.data[i].nBodies = nBodies
             self.data[i].cg = cg[i]
             self.data[i].cb = cb[i]
-            self.data[i].k = k[i]
+            self.data[i].k = k[i]*self.data[i].rho*self.data[i].g
             self.data[i].pos = pos[i]
             self.data[i].volDisp = volDisp[i]
             
@@ -226,13 +224,11 @@ class WamitOutput(object):
             for j in xrange(np.shape(self.data[i].rd.all)[2]):
                 self.data[i].rd.all[:,:,j] = self.data[i].rd.all[:,:,j]*self.density*self.data[i].w[j]
                 
-            self.data[i].ex.mag = exAll[:,6*i:6+6*i]
-            self.data[i].ex.phase = phaseAll[:,6*i:6+6*i]
-            self.data[i].ex.re = exReAll[:,6*i:6+6*i]
-            self.data[i].ex.im = exImAll[:,6*i:6+6*i]
-
-
-
+            self.data[i].ex.mag = exAll[:,6*i:6+6*i]*self.data[i].rho*self.data[i].g
+            self.data[i].ex.phase = np.deg2rad(phaseAll[:,6*i:6+6*i])
+            self.data[i].ex.re = self.data[i].ex.mag*np.cos(self.data[i].ex.phase)
+            self.data[i].ex.im = self.data[i].ex.mag*np.sin(self.data[i].ex.phase)       
+            
     def writeWecSimHydroData(self):
         hd.writeWecSimHydroData(self.data,self.files['wecSim'])    
         
@@ -244,5 +240,8 @@ class WamitOutput(object):
        
        
     def plotAddedMassAndDamping(self,components):
-        hd.plotAddedMassAndDamping(self.data,components)
+        hd.plotAddedMassAndDamping(self.data,self.files['plots'],components)
+
+    def plotExcitation(self,components):
+        hd.plotExcitation(self.data,self.files['plots'],components)
 

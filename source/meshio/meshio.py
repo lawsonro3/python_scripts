@@ -11,8 +11,13 @@ meshes. A few simple improvements (i.e. if tests) to the writing functions can f
 Author: Michael Lawson
 """
 import numpy as np
-import vtk # vtk is required to use this module.
-from vtk.util.numpy_support import vtk_to_numpy
+import os
+try:
+    import vtk
+    from vtk.util.numpy_support import vtk_to_numpy
+except:
+    raise Exception('The VTK Python module is required to use this module.')
+
 
 class PanelMesh(object):
     ''' Class to handel surface meshes. The class currently handels quad or tri
@@ -25,6 +30,9 @@ class PanelMesh(object):
         self.points = []
         self.numFaces = None
         self.numPoints = None
+        
+        if os.path.isfile(meshFileName) is False:
+            raise Exception('The file ' + meshFileName + ' does not exist')
         
     def writeVtp(self,outputFile=None):
         '''
@@ -264,21 +272,7 @@ def mkVtkIdList(it):
     for i in it:
         vil.InsertNextId(int(i))
     return vil
-    
-#    def writeNemohMeshInput(self):
-#        '''
-#        with open(self.files['nemohMeshInput'],'w') as fid:
-#            fid.write(str(self.numCords))
-#            fid.write('\n')
-#            fid.write(str(self.numFaces))
-#            fid.write('\n')
-#            for i in range(np.shape(self.cords)[0]):
-#                fid.writelines(str(self.cords[i]).replace('[','').replace(']',''))
-#                fid.write('\n')
-#            for i in range(self.numFaces):
-#                fid.write(str(self.faces[i]+1).replace('[','').replace(']',''))
-#                fid.write('\n')
-    
+ 
 #def removeSurfacePanels(self):
 #    tempFaces = []
 #    count = 0
