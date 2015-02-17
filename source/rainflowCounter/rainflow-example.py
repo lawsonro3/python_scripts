@@ -9,7 +9,7 @@ from pylab import *
 from scipy.io import loadmat
 interactive(True)
 
-dataFile = '/Users/mlawson/Dropbox/NREL/4-oceanCurrentTurbine/gulfStreamInformation/gulfStreamADCPDataFromRickDriscoll/Cruises/Combined/matfiles/pro_data.mat'
+dataFile = ''
 adcpData = loadmat(dataFile)
 V = adcpData['V_nogap']
 #samples = linspace(0,size(V,0),size(V,0))

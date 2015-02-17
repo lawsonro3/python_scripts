@@ -66,13 +66,16 @@ class WamitOutput(object):
             
             if 'Water depth:' in line:
                 waterDepth = wamitOut[i].split()[2]
-                waterDepth = np.float(waterDepth)
+                try:
+                    waterDepth = np.float(waterDepth)
+                except:
+                    pass 
 
             # If there is one body in the WAMIT run
             if "Input from Geometric Data File:" in line:
 
                 nBodies = 1
-                name[0] = 'body'
+                name[0] = wamitOut[i].split()[-1]
 
 
             
@@ -194,7 +197,7 @@ class WamitOutput(object):
         T = np.array(T).astype(float)
 
 
-                    
+        # Load data into the hydrodata strucuture          
         for i in xrange(nBodies):       
             self.data[i] = hd.HydrodynamicData() 
             self.data[i].name = name[i]

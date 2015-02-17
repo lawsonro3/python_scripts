@@ -26,6 +26,7 @@ class AqwaOutput(object):
         self.files['out'] = os.path.join(self.dir,outFile)
         self.files['hdf5'] = os.path.join(self.dir,outFile[0:-4] + '.h5')
         self.files['wecSim'] = os.path.join(self.dir,outFile[0:-4])
+        self.files['plot'] = os.path.join(self.dir,outFile[0:-4])
         
         self.data = {}        
         
@@ -174,4 +175,4 @@ class AqwaOutput(object):
         hd.writeHdf5(self.data,self.files['hdf5'])
         
     def plotAddedMassAndDamping(self,components):
-        hd.plotAddedMassAndDamping(self.data,components)
+        hd.plotAddedMassAndDamping(self.data,self.files['plot'],components)

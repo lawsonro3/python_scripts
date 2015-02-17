@@ -12,8 +12,8 @@ plt.interactive(True)
 class HydrodynamicCoefficients(object):
     def __init__(self):
         self.all            = np.array([])
-        self.inf        = np.array([])
-        self.zero       = np.array([])
+        self.inf            = np.array([])
+        self.zero           = np.array([])
     
 class HydrodynamicExcitation(object):
     def __init__(self):
@@ -42,6 +42,8 @@ class HydrodynamicData(object):
         self.waterDepth     = None                          # Water depth
         self.waveDir        = 0                             # Wave direction
         self.name           = None                          # Name of the body
+    
+    
         
 def writeHdf5(data,outFile):
 
@@ -143,6 +145,10 @@ def writeHdf5(data,outFile):
                 rho.attrs['units'] = 'kg/m^3'
                 rho.attrs['description'] = 'Water density'
                 
+                name = f.create_dataset('body' + str(i) + '/sim/name',data=data[i].name)
+                name.attrs['description'] = 'Body name'
+                
+                
             print 'Wrote HDF5 data to ' + outFile
 
 
@@ -187,7 +193,7 @@ def plotAddedMassAndDamping(data,fName,components):
         
         fNameTemp = fName + '-addedMassRadDamping-body' + str(body) + '.ps'
         
-        f, ax = plt.subplots(2, sharex=True, figsize=(7,10))
+        f, ax = plt.subplots(2, sharex=True, figsize=(8,10))
         ax[0].plot()
         ax[0].set_title('Hydrodynamic coefficients for body ' + str(body) + ':' + str(data[body].name))    
         ax[0].set_ylabel('Added mass')
@@ -200,7 +206,7 @@ def plotAddedMassAndDamping(data,fName,components):
         for i,comp in enumerate(components):
             
             x = comp[0]
-            y = comp[1]
+            y = comp[1]+6*body
             w = data[body].w
             rd = data[body].rd.all[x,y,:]
             am = data[body].am.all[x,y,:]
@@ -219,7 +225,7 @@ def plotExcitation(data,fName,components):
         
         fNameTemp = fName + '-excitation-body' + str(body) + '.ps'
         
-        f, ax = plt.subplots(4, sharex=True,figsize=(7,10))
+        f, ax = plt.subplots(4, sharex=True,figsize=(8,10))
         ax[0].plot()
         ax[0].set_title('Excitation force for body ' + str(body) + ':' + str(data[body].name))    
         ax[0].set_ylabel('Ex force - real')

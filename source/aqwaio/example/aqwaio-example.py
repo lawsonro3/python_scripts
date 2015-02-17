@@ -6,6 +6,7 @@ Created on Thu Jan 15 10:42:54 2015
 import aqwaio as aio
 import matplotlib.pyplot as plt
 plt.close('all')
+plt.interactive(True)
 
 # Load AQWA output data file
 aq = aio.AqwaOutput(directory='.', outFile='aqwa-example-data.lis')
@@ -19,3 +20,4 @@ aq.writeWecSimHydroData()
 
 # Write hydrodynamic data to HDF5 file format
 aq.writeHdf5()
+
