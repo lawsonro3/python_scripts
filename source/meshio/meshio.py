@@ -28,6 +28,7 @@ Author: Michael Lawson
 """
 import numpy as np
 import os
+from sys import platform as _platform
 try:
     import vtk
     from vtk.util.numpy_support import vtk_to_numpy
@@ -83,7 +84,7 @@ class PanelMesh(object):
         writer.Write()
         self.vtpOutFile = outputFile
         
-    def writeNemohMesh(self,outputFile=None):
+    def writeNemoh(self,outputFile=None):
         '''
         Function to write a mesh file in the Nemoh format.
         
@@ -100,13 +101,13 @@ class PanelMesh(object):
         '''
         if outputFile is None:
             with open(self.meshFileName[:-3]+'nemoMesh.dat','w') as fid:
-                self._writeNemohMesh(fid)
+                self._writeNemoh(fid)
         else:
             with open(outputFile,'w') as fid:
-                self._writeNemohMesh(fid)
+                self._writeNemoh(fid)
         self.nemohMeshOutFile = outputFile
                 
-    def _writeNemohMesh(self,fid):
+    def _writeNemoh(self,fid):
         fid.write('2 0') # This should not be hardcoded
         fid.write('\n')
         for i in xrange(self.numPoints):
@@ -141,6 +142,8 @@ class PanelMesh(object):
             with open(outputFile,'w') as fid:
                 self._writeGdf(fid)
         self.gdfOutFile = outputFile
+
+        print 'Wrote gdf file to ' + str(outputFile)
                 
     def _writeGdf(self,fid):
         fid.write('Mesh file written by meshio.py')
@@ -159,6 +162,25 @@ class PanelMesh(object):
                 faceMod = np.append(face,face[-1])
                 for j,pointKey in enumerate(faceMod):
                     fid.write(str(self.points[pointKey]).replace(',','').replace('[','').replace(']','') + '\n')
+
+
+
+    def paraview(self):
+        '''
+        Visualize the geometry in paraview
+
+        To use this function make a symbolic link to the paraview.app folder
+        on your system to ~/bin. Or alternatively change this function
+        '''
+        fileName = self.meshFileName[:-3] + 'vis-temp.vtp'
+        if _platform == 'darwin':
+            self.writeVtp(outputFile=fileName)
+            try:
+                os.system('open ~/bin/paraview ' + fileName + ' &')
+            except:
+                raise Exception('~/bin/paraview not found')
+        else:
+            print 'paraview() function only supported for osx'
 
 def readGdf(fileName):
     '''
@@ -213,6 +235,7 @@ def readStl(fileName):
     
     return meshData
     
+
 def readVtp(fileName):
     '''
     Function to read VTK Polydata meshes
@@ -245,7 +268,7 @@ def readVtp(fileName):
     
     return meshData
     
-def readNemohMesh(fileName):
+def readNemoh(fileName):
     '''
     Function to read nemoh meshes
     
@@ -288,6 +311,7 @@ def mkVtkIdList(it):
     for i in it:
         vil.InsertNextId(int(i))
     return vil
+
  
 #def removeSurfacePanels(self):
 #    tempFaces = []

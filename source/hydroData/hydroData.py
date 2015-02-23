@@ -190,7 +190,7 @@ def writeWecSimHydroData(data,outFile):
             
             
             
-def plotAddedMassAndDamping(data,fName,components):
+def plotAddedMassAndDamping(data,fName,components,savePlots=False):
     '''
     Function to plot the diagional component of added mass and raditation
     damping - this could be singificantly improved
@@ -227,9 +227,11 @@ def plotAddedMassAndDamping(data,fName,components):
             ax[0].legend(loc=0)
                 
         plt.show()
-        f.savefig(fNameTemp,dpi=300)
 
-def plotExcitation(data,fName,components):
+        if savePlots is True:
+            f.savefig(fNameTemp,dpi=300)
+
+def plotExcitation(data,fName,components,savePlots=False):
 
     for body in xrange(np.size(data.keys())):
         
@@ -267,4 +269,7 @@ def plotExcitation(data,fName,components):
             ax[0].legend(loc=0)
                 
         plt.show()
-        f.savefig(fNameTemp,dpi=300)
+
+        if savePlots is True:
+            f.savefig(fNameTemp,dpi=300)
+
