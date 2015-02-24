@@ -38,7 +38,6 @@ class WamitOutput(object):
         self.files['out'] = os.path.join(self.dir,outFile)
         self.files['hdf5'] = self.files['out'][:-4] + '.h5'
         self.files['wecSim'] = self.files['out'][:-4]
-        self.files['plots'] = self.files['out'][:-4]
         self.data = {}
         self.readOutFile()
 
@@ -47,10 +46,8 @@ class WamitOutput(object):
     def readOutFile(self):
         '''
         Function to read WAMIT output file into the class
-        Inputs:
-            None
-        Outputs:
-            None
+        Inputs: None
+        Outputs: None
         '''
         with open(self.files['out'],'r') as fid:
 
@@ -215,6 +212,7 @@ class WamitOutput(object):
             self.data[i].waterDepth = waterDepth
             self.data[i].rho = self.density            
             self.data[i].nBodies = nBodies
+            self.data[i].bodyN = i
             self.data[i].cg = cg[i]
             self.data[i].cb = cb[i]
             self.data[i].k = k[i]*self.data[i].rho*self.data[i].g
@@ -244,17 +242,7 @@ class WamitOutput(object):
             
     def writeWecSimHydroData(self):
         hd.writeWecSimHydroData(self.data,self.files['wecSim'])    
-        
-        
-        
+         
     def writeHdf5(self):
         hd.writeHdf5(self.data,self.files['hdf5'])
-       
-       
-       
-    def plotAddedMassAndDamping(self,components):
-        hd.plotAddedMassAndDamping(self.data,self.files['plots'],components)
-
-    def plotExcitation(self,components):
-        hd.plotExcitation(self.data,self.files['plots'],components)
 
