@@ -7,7 +7,9 @@ This is an example of how to use the wamitio module
 """
 
 import wamitio as wio
+import hydroData as hd
 import matplotlib.pyplot as plt
+import pickle
 plt.close('all')
 plt.interactive(True)
 
@@ -23,4 +25,5 @@ w.data[2].plotAddedMassAndDamping(comps)
 w.data[0].plotExcitation([0])
 
 # Save the data in HDF5 format
-w.writeHdf5()
+hd.writeHdf5(w.data,w.files['hdf5'])
+hd.writePickle(w.data,w.files['pickle'])

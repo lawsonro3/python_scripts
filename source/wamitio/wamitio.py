@@ -38,6 +38,7 @@ class WamitOutput(object):
         self.files['out'] = os.path.join(self.dir,outFile)
         self.files['hdf5'] = self.files['out'][:-4] + '.h5'
         self.files['wecSim'] = self.files['out'][:-4]
+        self.files['pickle'] = self.files['out'][:-4] + '.p'
         self.data = {}
         self.readOutFile()
 
@@ -239,10 +240,3 @@ class WamitOutput(object):
             self.data[i].ex.phase = np.deg2rad(phaseAll[:,6*i:6+6*i])
             self.data[i].ex.re = self.data[i].ex.mag*np.cos(self.data[i].ex.phase)
             self.data[i].ex.im = self.data[i].ex.mag*np.sin(self.data[i].ex.phase)       
-            
-    def writeWecSimHydroData(self):
-        hd.writeWecSimHydroData(self.data,self.files['wecSim'])    
-         
-    def writeHdf5(self):
-        hd.writeHdf5(self.data,self.files['hdf5'])
-

@@ -24,6 +24,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+import pickle
+
 class HydrodynamicCoefficients(object):
     '''
     Data class that contains hydrodynamic coefficient data
@@ -201,6 +203,19 @@ class HydrodynamicData(object):
             ax[3].plot(w,phase,'x-',label='Component (' + str(m) + ')')
             
             ax[0].legend(loc=0)
+
+def writePickle(data,outFile):
+    '''
+    Writes hydrodynamic data to a pickle file.
+    
+    Inputs:
+    data -- dictionary that contains HydrodynamicData objects for each body in the simulation
+    outFile -- name of the pickle file
+
+    Outputs: None
+    '''
+
+    pickle.dump(data,open(outFile,'wb'))
 
 def writeHdf5(data,outFile):
     '''

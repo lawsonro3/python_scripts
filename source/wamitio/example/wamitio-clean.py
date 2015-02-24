@@ -2,5 +2,4 @@
 
 import os
 
-os.system('rm *.mat')
-os.system('rm *.h5'),
+os.system('rm *.mat *.h5 *.p')
