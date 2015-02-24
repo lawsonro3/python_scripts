@@ -1,6 +1,5 @@
 #wamitio (WAMIT Input/Output)
 
-# wamitio
 ##Metadata
 * Author: Michael Lawson
 * Date updated: 23 Feb 2015
