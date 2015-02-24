@@ -216,6 +216,8 @@ def writePickle(data,outFile):
     '''
 
     pickle.dump(data,open(outFile,'wb'))
+    
+    print 'Wrote pickle data to ' + outFile
 
 def writeHdf5(data,outFile):
     '''
