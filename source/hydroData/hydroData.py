@@ -174,19 +174,17 @@ class HydrodynamicData(object):
 
         ax[0].plot()
         ax[0].set_ylabel('Ex force - mag')
-        ax[2].set_title('Excitation force for body ' + str(self.name))    
+        ax[0].set_title('Excitation force for body ' + str(self.name))    
+
+        ax[1].plot()        
+        ax[1].set_xlabel('Wave frequency (rad/s)')        
+        ax[1].set_ylabel('Ex force - phase')
 
         ax[2].plot()
         ax[2].set_ylabel('Ex force - real')
         
-        ax[1].plot()
-        ax[1].set_ylabel('Ex force - imaginary')
-        
-        
-        
-        ax[3].plot()        
-        ax[3].set_xlabel('Wave frequency (rad/s)')        
-        ax[3].set_ylabel('Ex force - phase')
+        ax[3].plot()
+        ax[3].set_ylabel('Ex force - imaginary')
         
         for i,comp in enumerate(components):
             
@@ -197,11 +195,11 @@ class HydrodynamicData(object):
             mag = self.ex.mag[:,m]
             phase = self.ex.phase[:,m]
 
-            ax[0].plot(w,re,'x-',label='Component (' + str(m) + ')')
-            ax[1].plot(w,im,'x-',label='Component (' + str(m) + ')')
-            ax[2].plot(w,mag,'x-',label='Component (' + str(m) + ')')
-            ax[3].plot(w,phase,'x-',label='Component (' + str(m) + ')')
-            
+            ax[0].plot(w,mag,'x-',label='Component (' + str(m) + ')')
+            ax[1].plot(w,phase,'x-',label='Component (' + str(m) + ')')
+            ax[2].plot(w,re,'x-',label='Component (' + str(m) + ')')
+            ax[3].plot(w,im,'x-',label='Component (' + str(m) + ')')
+
             ax[0].legend(loc=0)
 
 def writePickle(data,outFile):
