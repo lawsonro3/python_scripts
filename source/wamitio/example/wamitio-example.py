@@ -27,3 +27,4 @@ w.data[0].plotExcitation([0])
 # Save the data in HDF5 format
 hd.writeHdf5(w.data,w.files['hdf5'])
 hd.writePickle(w.data,w.files['pickle'])
+	
