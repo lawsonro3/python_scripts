@@ -1,8 +1,9 @@
 #wamitio (WAMIT Input/Output)
 
+# wamitio
 ##Metadata
 * Author: Michael Lawson
-* Date updated: 6 Feb 2015
+* Date updated: 23 Feb 2015
 
 ##This module provides the functionality to
 * Read hydrodynamic coefficients from WAMIT ".out" files
@@ -24,4 +25,5 @@
   * numpy
   * scipy
   * matplotlib
+  * pickle
   * h5py
