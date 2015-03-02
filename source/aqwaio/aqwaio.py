@@ -15,8 +15,19 @@ limitations under the License.
 """
 
 import os
+
 import numpy as np
-from astropy.io import ascii
+
+from sys import platform as _platform
+
+try:
+
+    from astropy.io import ascii
+
+except:
+
+    raise Exception('The astropy module must be installed. Try pip install astropy')
+
 import hydroData as hd
 
 class AqwaOutput(object):
@@ -28,15 +39,8 @@ class AqwaOutput(object):
     Outputs:
         None
     '''
-    def __init__(self,directory,outFile ):
-
-        self.dir = directory
-        
-        self.files = {}
-        self.files['out'] = os.path.join(self.dir,outFile)
-        self.files['hdf5'] = os.path.join(self.dir,outFile[0:-4] + '.h5')
-        self.files['wecSim'] = os.path.join(self.dir,outFile[0:-4])
-        self.files['plot'] = os.path.join(self.dir,outFile[0:-4])
+    def __init__(self,outFile):
+        self.files = hd.generateFileNames(outFile)
         
         self.data = {}        
         
@@ -72,6 +76,7 @@ class AqwaOutput(object):
                 self.data[self.nBodies].waterDepth = waterDepth
                 self.data[self.nBodies].g = gravity 
                 self.data[self.nBodies].rho = density
+                self.data[self.nBodies].name = 'body' + str(self.nBodies)
                 self.nBodies += 1
             
             if 'AT THE FREE-FLOATING EQUILIBRIUM POSITION' in line:

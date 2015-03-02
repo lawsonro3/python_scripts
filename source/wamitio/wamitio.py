@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import numpy as np
 import hydroData as hd
 
@@ -28,23 +27,18 @@ class WamitOutput(object):
     Outputs:
         None
     '''
-    def __init__(self,directory,outFile):
+    def __init__(self,outFile):
 
-        self.dir = directory
+        self.files = hd.generateFileNames(outFile)
         
         self.density = 1000.
 
-        self.files = {}
-        self.files['out'] = os.path.join(self.dir,outFile)
-        self.files['hdf5'] = self.files['out'][:-4] + '.h5'
-        self.files['wecSim'] = self.files['out'][:-4]
-        self.files['pickle'] = self.files['out'][:-4] + '.p'
         self.data = {}
-        self.readOutFile()
+        self._readOutFile()
 
 
     
-    def readOutFile(self):
+    def _readOutFile(self):
         '''
         Function to read WAMIT output file into the class
         Inputs: None
@@ -239,4 +233,4 @@ class WamitOutput(object):
             self.data[i].ex.mag = exAll[:,6*i:6+6*i]*self.data[i].rho*self.data[i].g
             self.data[i].ex.phase = np.deg2rad(phaseAll[:,6*i:6+6*i])
             self.data[i].ex.re = self.data[i].ex.mag*np.cos(self.data[i].ex.phase)
-            self.data[i].ex.im = self.data[i].ex.mag*np.sin(self.data[i].ex.phase)       
+            self.data[i].ex.im = self.data[i].ex.mag*np.sin(self.data[i].ex.phase)

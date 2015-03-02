@@ -9,12 +9,11 @@ This is an example of how to use the wamitio module
 import wamitio as wio
 import hydroData as hd
 import matplotlib.pyplot as plt
-import pickle
 plt.close('all')
 plt.interactive(True)
 
 # Load the data
-w = wio.WamitOutput(directory='./',outFile='oswec.out')
+w = wio.WamitOutput(outFile='./oswec.out')
 
 # Plot selected components of hydrodynamic coefficinets and excitation force
 # Note that python uses zero indexing
@@ -27,4 +26,3 @@ w.data[0].plotExcitation([0])
 # Save the data in HDF5 format
 hd.writeHdf5(w.data,w.files['hdf5'])
 hd.writePickle(w.data,w.files['pickle'])
-	

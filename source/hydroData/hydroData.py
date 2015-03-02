@@ -22,7 +22,11 @@ Author: Michael Lawson
 
 import numpy as np
 
+import os
+
 import matplotlib.pyplot as plt
+
+from sys import platform as _platform
 
 import pickle
 
@@ -328,8 +332,37 @@ def writeHdf5(data,outFile):
             name = f.create_dataset('body' + str(key) + '/sim/name',data=data[key].name)
             name.attrs['description'] = 'Body name'
             
-            
         print 'Wrote HDF5 data to ' + outFile
+
+def generateFileNames(outFile):
+    '''
+    Function to generate filenames needed by hydroData module
+
+    Inputs:
+    outFile -- Name of hydrodynamic data file
+
+    Outputs:
+    files -- a dictionary of file generateFileNames
+    '''
+    
+    outFile = os.path.abspath(outFile)
+
+    if _platform == 'darwin' or _platform == "linux" or _platform == "linux2":
+
+        drive = ''
+        (path,file) = os.path.split(outFile)
+        
+    else:
+
+        (drive,path,file) = os.path.split(outFile)
+
+    files = {}
+    files['out'] = os.path.join(drive,path,file)
+    files['hdf5'] = os.path.join(drive,path,file[0:-4] + '.h5')
+    files['pickle'] = os.path.join(drive,path,file[0:-4] + '.p')
+    files['wecSim'] = os.path.join(drive,path,file[0:-4] )
+
+    return files
 
 #def writeWecSimHydroData(data,outFile):
 
