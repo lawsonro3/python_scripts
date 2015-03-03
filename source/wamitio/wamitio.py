@@ -16,6 +16,8 @@ limitations under the License.
 
 import numpy as np
 import hydroData as hd
+from os import system as _sys
+from sys import platform as _platform
 
 class WamitOutput(object):
     '''
@@ -234,3 +236,15 @@ class WamitOutput(object):
             self.data[i].ex.phase = np.deg2rad(phaseAll[:,6*i:6+6*i])
             self.data[i].ex.re = self.data[i].ex.mag*np.cos(self.data[i].ex.phase)
             self.data[i].ex.im = self.data[i].ex.mag*np.sin(self.data[i].ex.phase)
+
+
+def clean(directory='.'):
+
+    if _platform == 'darwin' or _platform == 'linux':
+
+        _sys('rm -rf *.out *.1 *.3 wamitlog.txt errorf.log *.p2f *.hst *.p *.h5')
+
+    else:
+        print 'The clean function is only supported for osx and linux'
+
+
