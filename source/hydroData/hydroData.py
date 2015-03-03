@@ -91,8 +91,8 @@ class HydrodynamicData(object):
     rd -- Radiation damping coefficients of HydrodynamicCoefficients
     type
     wpArea -- Water plane area          
-    buoyForce -- Buoyanch force at equelibrium
-    k -- Hydrostatic stifness matrix
+    buoyForce -- Buoyancy force at equilibrium
+    k -- Hydrostatic stiffness matrix
     ex -- Excitation coeffs of HydrodynamicExcitation type
     waterDepth -- Water depth
     waveDir -- Wave direction 
@@ -128,7 +128,7 @@ class HydrodynamicData(object):
         components -- A list of components to plot. E.g [[0,0],[1,1],[2,2]]
         
         Outputs:
-        None -- A plot is displayed. the plt.show() command may need to be used
+        None -- A plot is displayed. The plt.show() command may need to be used
         depending on your python env settings
         '''                        
         
@@ -167,26 +167,27 @@ class HydrodynamicData(object):
         components -- A list of components to plot. E.g [0,1,2,5]
         
         Outputs:
-        None -- A plot is displayed. the plt.show() command may need to be used
+        None -- A plot is displayed. The plt.show() command may need to be used
         depending on your python env settings
         '''
         
         f, ax = plt.subplots(4, sharex=True,figsize=(8,10))
 
-        # Frame 1 - 
-
-
+        # Frame 0 - magnitude
         ax[0].plot()
         ax[0].set_ylabel('Ex force - mag')
         ax[0].set_title('Excitation force for body ' + str(self.name))    
 
+        # Frame 1 - phase
         ax[1].plot()        
         ax[1].set_xlabel('Wave frequency (rad/s)')        
         ax[1].set_ylabel('Ex force - phase')
 
+        # Frame 2 - real
         ax[2].plot()
         ax[2].set_ylabel('Ex force - real')
         
+        # Frame 3 - imaginary
         ax[3].plot()
         ax[3].set_ylabel('Ex force - imaginary')
         
@@ -334,6 +335,32 @@ def writeHdf5(data,outFile):
             
         print 'Wrote HDF5 data to ' + outFile
 
+def writeWecSimHydroData(data,outFile):
+
+    for i in range(np.size(data.keys())):
+
+        import scipy.io as sio
+        curData = data[i]
+        out = {}
+        out['waterDepth'] = curData.waterDepth
+        out['waveHeading'] = curData.waveDir
+        out['vol'] = curData.volDisp
+        out['cg'] = curData.cg
+        out['period'] = curData.T[::-1]
+        out['linearHyroRestCoef'] = curData.k
+        out['fAddedMassZero'] = curData.am.infFreq
+        out['fAddedMass'] = curData.am.all[:,:,::-1]
+        out['fDamping'] = curData.rd.all[:,:,::-1]
+        out['fExtRe'] = curData.ex.re[::-1,:].transpose()
+        out['fExtIm'] = curData.ex.im[::-1,:].transpose()
+        out['fExtMag'] = curData.ex.mag[::-1,:].transpose()
+        out['fExtPhase'] = curData.ex.phase[::-1,:].transpose()
+            
+        outFileName = outFile[0:-4] + '-body' + str(i) +'.mat'
+        sio.savemat(outFileName,out)
+
+        print 'Wrote MATLAB output for WEC-Sim to ' + outFileName
+
 def generateFileNames(outFile):
     '''
     Function to generate filenames needed by hydroData module
@@ -344,47 +371,14 @@ def generateFileNames(outFile):
     Outputs:
     files -- a dictionary of file generateFileNames
     '''
-    
-    outFile = os.path.abspath(outFile)
 
-    if _platform == 'darwin' or _platform == "linux" or _platform == "linux2":
-
-        drive = ''
-        (path,file) = os.path.split(outFile)
-        
-    else:
-
-        (drive,path,file) = os.path.split(outFile)
+    (path,file) = os.path.split(outFile)
+ 
 
     files = {}
-    files['out'] = os.path.join(drive,path,file)
-    files['hdf5'] = os.path.join(drive,path,file[0:-4] + '.h5')
-    files['pickle'] = os.path.join(drive,path,file[0:-4] + '.p')
-    files['wecSim'] = os.path.join(drive,path,file[0:-4] )
+    files['out'] = os.path.join(path,file)
+    files['hdf5'] = os.path.join(path,file[0:-4] + '.h5')
+    files['pickle'] = os.path.join(path,file[0:-4] + '.p')
+    files['wecSim'] = os.path.join(path,file[0:-4] + '.mat')
 
     return files
-
-#def writeWecSimHydroData(data,outFile):
-
-        # for i in range(np.size(data.keys())):
-
-        #     curData = data[i]
-        #     out = {}
-        #     out['waterDepth'] = curData.waterDepth
-        #     out['waveHeading'] = curData.waveDir
-        #     out['vol'] = curData.volDisp
-        #     out['cg'] = curData.cg
-        #     out['period'] = curData.T[::-1]
-        #     out['linearHyroRestCoef'] = curData.k
-        #     out['fAddedMassZero'] = curData.am.infFreq
-        #     out['fAddedMass'] = curData.am.all[:,:,::-1]
-        #     out['fDamping'] = curData.rd.all[:,:,::-1]
-        #     out['fExtRe'] = curData.ex.re[::-1,:].transpose()
-        #     out['fExtIm'] = curData.ex.im[::-1,:].transpose()
-        #     out['fExtMag'] = curData.ex.mag[::-1,:].transpose()
-        #     out['fExtPhase'] = curData.ex.phase[::-1,:].transpose()
-            
-        #     outFileName = outFile+'-body' + str(i) +'.mat'
-        #     sio.savemat(outFileName,out)
-
-        #     print 'Wrote MATLAB output for WEC-Sim to ' + outFileName

@@ -34,8 +34,7 @@ class AqwaOutput(object):
     '''
     Class to read and interact with AQWA simulation data
     Inputs:
-        direcotry: location of the wamit output data
-        simName: base name of the wamit simulation files
+        outFile: name of the AQWA output file
     Outputs:
         None
     '''
@@ -188,6 +187,3 @@ class AqwaOutput(object):
         
     def writeHdf5(self):
         hd.writeHdf5(self.data,self.files['hdf5'])
-        
-    def plotAddedMassAndDamping(self,components):
-        hd.plotAddedMassAndDamping(self.data,self.files['plot'],components)
