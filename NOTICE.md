@@ -1,5 +1,5 @@
 #python-scripts
-Copyright 2014 the National Renewable Energy Laboratory
+Copyright 2014 Michael Lawson
 
 #Developer
 Michael Lawson
