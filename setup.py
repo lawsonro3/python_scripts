@@ -8,7 +8,7 @@ setup(
 
     name='python_scripts',
 
-    version='beta',
+    version='0.1',
 
     description='Michael Lawson\'s Python scripts',
 
@@ -33,7 +33,7 @@ setup(
 
     packages=find_packages(exclude=['doc', 'tutorials']),
 
-    install_requires=['numpy', 'scipy', 'matplotlib'],
+    install_requires=['numpy', 'scipy', 'matplotlib', 'pandas'],
 
     extras_require={
         'dev': [],

@@ -9,6 +9,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+import os
+
+def read_h_levels_cell(inputData):
+    h_levels_cell_file = os.path.join(inputData['base_dir'],inputData['avg_dir'],inputData['times'],'hLevelsCell')
+    zCell = open(h_levels_cell_file,'r').read().split()
+    zCell = np.array([float(i) for i in zCell])
+    return zCell
 
 def theta_w_avg_cell(inputData):
 
@@ -18,14 +25,14 @@ def theta_w_avg_cell(inputData):
 
     ni = len(inputData['times'])
 
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/Tw_mean'
+    strData = os.path.join(inputData['time_dir'], 'Tw_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     t = np.array(data[0])
     dt = np.array(data[1])
     TwMean = data[list(range(2,len(data.columns)))]
 
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/q3_mean'
+    strData = os.path.join(inputData['time_dir'], 'q3_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     q3Mean = data[list(range(2,len(data.columns)))]
@@ -68,7 +75,8 @@ def theta_w_avg_cell(inputData):
 
     print('zi = ', ziAvg)
 
-    plt.figure()
+
+    plt.figure(num='theta_w_avg_cell')
     plt.plot(TwMeanAvg,zCell,'k--',linewidth=3,label=r'$\langle\theta w\rangle^{r}$')
     plt.plot(q3MeanAvg,zCell,'k:',linewidth=3,label=r'$\langle\theta w\rangle^{SGS}$')
     plt.plot(Twq3MeanAvg,zCell,'k',linewidth=3,label=r'$\langle\theta w\rangle^{Tot}$')
@@ -89,7 +97,7 @@ def Umean_avg_nonnormalized(inputData):
     nzCell = len(zCell)
 
     # U mean
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/U_mean'
+    strData = os.path.join(inputData['time_dir'],  'U_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     t = np.array(data[0])
@@ -97,13 +105,13 @@ def Umean_avg_nonnormalized(inputData):
     UMean = data[list(range(2,len(data.columns)))]
 
     # V mean
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/V_mean'
+    strData = os.path.join(inputData['time_dir'], 'V_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     VMean = data[list(range(2,len(data.columns)))]
 
     # W mean
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/W_mean'
+    strData = os.path.join(inputData['time_dir'], 'W_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     WMean = data[list(range(2,len(data.columns)))]
@@ -150,7 +158,8 @@ def Umean_avg_nonnormalized(inputData):
     z_f = 0.5*(zCell[1:] + zCell[0:-1])
     phi_m = (inputData['kappa']/inputData['uStarAvg'])*z_f*((np.array(UVMeanAvg.iloc[1:])-np.array(UVMeanAvg.iloc[0:-1])))/(zCell[1:]-zCell[0:-1])
 
-    plt.figure()
+
+    plt.figure(num='Umean_avg_nonnormalized')
     plt.plot(phi_m,z_f/inputData['ziAvg'])
     plt.xlabel(r'$\phi_m$')
     plt.ylabel(r'$z/z_i$')
@@ -190,58 +199,63 @@ def Umean_avg_nonnormalized(inputData):
 
     # plot u
 
-    plt.figure()
+
+    plt.figure(num='Vel vs. zCell')
     plt.plot(UMeanAvg,zCell,'k--',linewidth=3,label=r'$\langle U_x \rangle$')
     plt.plot(VMeanAvg,zCell,'k:',linewidth=3,label=r'$\langle U_y \rangle$')
     plt.plot(UVMeanAvg,zCell,'k-',linewidth=3,label=r'$\langle |U| \rangle$')
-    plt.plot([0,16],[inputData['zHub'],inputData['zHub']],'r-')
+    plt.plot([0,16],[inputData['windHeight'],inputData['windHeight']],'r-')
     plt.legend()
     plt.xlabel(r'$\langle U_{i} \rangle$ (m/s)')
     plt.ylabel(r'$z$ (m)')
 
     # plot w
 
-    plt.figure()
+
+    plt.figure(num='WMeanAvg vs ZCell')
     plt.plot(WMeanAvg,zCell,'k-',linewidth=3)
     plt.xlabel(r'$\langle W \rangle$ (m/s)')
     plt.ylabel(r'$z$ (m)')
 
     # wind direction
 
-    plt.figure()
+
     plt.plot(windDir,zCell,'k-')
+    plt.figure(num='windDir vs ZCell')
     plt.xlabel(r'wind direction ($^\circ$)')
     plt.ylabel(r'$z$ (m)')
 
     # plot normalized velocities
 
-    plt.figure()
-    plt.plot(UMeanAvg/inputData['Ug'],VMeanAvg/inputData['Ug'],'k-')
+
+    plt.figure(num='UMeanAvg/U0Mag vs UMeanAvg/V0Mag')
+    plt.plot(UMeanAvg/inputData['U0Mag'],VMeanAvg/inputData['U0Mag'],'k-') #should this be wmag?
     plt.xlabel(r'$\langle U \rangle/U_{g}$')
     plt.ylabel(r'$\langle V \rangle/U_{g}$')
 
-    plt.figure()
+
+    plt.figure(num='Some turb stuff')
     plt.semilogx(zCell/inputData['z0'],inputData['kappa']*UVMeanAvg/inputData['uStarAvg'],'k-')
     plt.xlabel(r'z/z_0')
     plt.ylabel(r'$(\kappa/u_{*}) \langle U \rangle$')
     plt.title(r'$\langle |U| \rangle$ law of the wall')
 
-    outputData = dict()
-    outputData['dUdz1Avg'] = dudz1Avg
-    outputData['dVdz1Avg'] = dvdz1Avg
-    outputData['Uvec'] = Uvec
-    outputData['Umag'] = Umag
-    outputData['dir'] = dirAvg
+
+    inputData['dUdz1Avg'] = dudz1Avg
+    inputData['dVdz1Avg'] = dvdz1Avg
+    inputData['Uvec'] = Uvec
+    inputData['Umag'] = Umag
+    inputData['dir'] = dirAvg
 
 
-    return outputData
+    return inputData
 
 def Tmean_avg_nonnormalized(inputData):
 
     zCell = inputData['zCell']
     nzCell = len(zCell)
 
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/T_mean'
+    strData = os.path.join(inputData['time_dir'], 'T_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
 
     t = data[0]
@@ -276,7 +290,8 @@ def Tmean_avg_nonnormalized(inputData):
         Tmag[i] = interp1d(zCell,TMeanAvg,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
 
     # plot results
-    plt.figure()
+
+    plt.figure(num='T vs zCell')
     plt.plot(TMeanAvg,zCell,'k-',label='Mean')
     plt.plot(TMeanInitial,zCell,'r:',label='Initial')
     plt.legend()
@@ -287,7 +302,7 @@ def Tmean_avg_nonnormalized(inputData):
 
 def variances_avg_cell(inputData):
 
-    outputData = dict()
+    # outputData = dict()
 
     # read in resolved stress data
     Umag = inputData['Umag']
@@ -296,34 +311,34 @@ def variances_avg_cell(inputData):
     nzCell = len(zCell)
 
     # load uu
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/uu_mean'
+    strData = os.path.join(inputData['time_dir'], 'uu_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     t = data[0]
     dt = data[1]
     uuMean = data[list(range(2,len(data.columns)))]
 
     # load vv
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/vv_mean'
+    strData = os.path.join(inputData['time_dir'], 'vv_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     vvMean = data[list(range(2,len(data.columns)))]
 
     # load ww
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/ww_mean'
+    strData = os.path.join(inputData['time_dir'], 'ww_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     wwMean = data[list(range(2,len(data.columns)))]
 
     # load uv
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/uv_mean'
+    strData = os.path.join(inputData['time_dir'], 'uv_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     uvMean = data[list(range(2,len(data.columns)))]
 
     # load uw
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/uw_mean'
+    strData = os.path.join(inputData['time_dir'], 'uw_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     uwMean = data[list(range(2,len(data.columns)))]
 
     # load vw
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/vw_mean'
+    strData = os.path.join(inputData['time_dir'], 'vw_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     vwMean = data[list(range(2,len(data.columns)))]
 
@@ -332,32 +347,32 @@ def variances_avg_cell(inputData):
     # read in SFS stress data
 
     # load uu
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R11_mean'
+    strData = os.path.join(inputData['time_dir'], 'R11_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R11_Mean = data[list(range(2,len(data.columns)))]
 
     # load vv
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R22_mean'
+    strData = os.path.join(inputData['time_dir'], 'R22_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R22_Mean = data[list(range(2,len(data.columns)))]
 
     # load ww
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R33_mean'
+    strData = os.path.join(inputData['time_dir'], 'R33_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R33_Mean = data[list(range(2,len(data.columns)))]
 
     # load uv
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R12_mean'
+    strData = os.path.join(inputData['time_dir'], 'R12_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R12_Mean = data[list(range(2,len(data.columns)))]
 
     # load uw
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R13_mean'
+    strData = os.path.join(inputData['time_dir'], 'R13_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R13_Mean = data[list(range(2,len(data.columns)))]
 
     # load vw
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/R23_mean'
+    strData = os.path.join(inputData['time_dir'], 'R23_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     R23_Mean = data[list(range(2,len(data.columns)))]
 
@@ -429,7 +444,7 @@ def variances_avg_cell(inputData):
 
     # find the turbulence intensity and tke at various heights
 
-    windDir = np.arctan2(inputData['U'][:,1],inputData['U'][:,0])
+    windDir = np.arctan2(inputData['Uvec'][:,1],inputData['Uvec'][:,0])
     for i in range(len(windDir)):
         if windDir[i] < 0.0:
             windDir[i] = -1.0*windDir[i]
@@ -488,7 +503,8 @@ def variances_avg_cell(inputData):
 
     # plot stuff
 
-    plt.figure()
+
+    plt.figure(num='uu vs zCell')
     plt.plot(sum11_avg,zCell,'k--',label=r'$\langle uu \rangle$')
     plt.plot(sum22_avg,zCell,'k:',label=r'$\langle vv \rangle$')
     plt.plot(sum33_avg,zCell,'k-',label=r'$\langle ww \rangle$')
@@ -504,7 +520,8 @@ def variances_avg_cell(inputData):
 
     plt.legend()
 
-    plt.figure()
+
+    plt.figure(num='uu vs zCell (2)')
     plt.plot(uuMeanAvg,zCell,'k--',label=r'$\langle uu \rangle$')
     plt.plot(vvMeanAvg,zCell,'k:',label=r'$\langle vv \rangle$')
     plt.plot(wwMeanAvg,zCell,'k-',label=r'$\langle ww \rangle$')
@@ -514,21 +531,21 @@ def variances_avg_cell(inputData):
 
     plt.legend()
 
-    outputData['TIxResolved'] = TIxResolved
-    outputData['TIyResolved'] = TIyResolved
-    outputData['TIzResolved'] = TIzResolved
-    outputData['TIxyzResolved'] = TIxyzResolved
-    outputData['TIdirResolved'] = TIdirResolved
-    outputData['tkeResolved'] = tkeResolved
-    outputData['TIxSum'] = TIxSum
-    outputData['TIySum'] = TIySum
-    outputData['TIzSum'] = TIzSum
-    outputData['TIxyzSum'] = TIxyzSum
-    outputData['TIdirSum'] = TIdirSum
-    outputData['tkeSum'] = tkeSum
+    inputData['TIxResolved'] = TIxResolved
+    inputData['TIyResolved'] = TIyResolved
+    inputData['TIzResolved'] = TIzResolved
+    inputData['TIxyzResolved'] = TIxyzResolved
+    inputData['TIdirResolved'] = TIdirResolved
+    inputData['tkeResolved'] = tkeResolved
+    inputData['TIxSum'] = TIxSum
+    inputData['TIySum'] = TIySum
+    inputData['TIzSum'] = TIzSum
+    inputData['TIxyzSum'] = TIxyzSum
+    inputData['TIdirSum'] = TIdirSum
+    inputData['tkeSum'] = tkeSum
 
 
-    return outputData
+    return inputData
 
 def Umean_h(inputData):
 
@@ -545,13 +562,13 @@ def Umean_h(inputData):
         zindex1 = zindex-1
         zindex2 = zindex
 
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/U_mean'
+    strData = os.path.join(inputData['time_dir'], 'U_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     t = data[0]
     dt = data[1]
     Umean = np.array(data[list(range(2,len(data.columns)))])
 
-    strData = inputData['baseDir'] + inputData['avg_dir'] + '/' + inputData['times'] + '/V_mean'
+    strData = os.path.join(inputData['time_dir'], 'V_mean')
     data = pd.read_csv(strData,header=None,delimiter=' ')
     Vmean = np.array(data[list(range(2,len(data.columns)))])
 
@@ -564,12 +581,14 @@ def Umean_h(inputData):
 
     # plot stuff
 
-    plt.figure()
-    plt.plot(t,Umeanz/inputData['Ug'],'k')
+    
+    plt.figure(num='t vs Umeanz/U0Mag')
+    plt.plot(t,Umeanz/inputData['U0Mag'],'k')
     plt.xlabel('t (s)')
     plt.ylabel(r'$\langle U \rangle /U_g$')
 
-    plt.figure()
-    plt.plot(t,Vmeanz/inputData['Ug'],'k')
+
+    plt.figure(num='t vs Vmeanz/U0Mag')
+    plt.plot(t,Vmeanz/inputData['U0Mag'],'k')
     plt.xlabel('t (s)')
     plt.ylabel(r'$\langle V \rangle /U_g$')

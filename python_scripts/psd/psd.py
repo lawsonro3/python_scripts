@@ -38,7 +38,7 @@ def cohere(a, b, nfft, window='hann', debias=True, noise=(0, 0)):
     elif len(noise) == 1:
         noise = [noise[0], noise[0]]
     if nens < 10:
-        print "Warning: Only %d ensembles in average. " % (nens)
+        print("Warning: Only %d ensembles in average. " % (nens))
     if nens <= 2:
         raise Exception("Coherence must be computed from a set of ensembles.")
     # fs=1 is ok because it comes out in the normalization.  (noise

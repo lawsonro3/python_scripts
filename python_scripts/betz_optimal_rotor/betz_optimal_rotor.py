@@ -30,18 +30,18 @@ interactive(True)
 # Define the rotor specs
 class Blade(object):
     def __init__(self,R=100.0,B=3.0,Cl=1.0,Cl_Cd_max_aoa=7.0,tsr=7.0,nElem=10,rStart=.1,rEnd=1):
-        # User specified or default values        
+        # User specified or default values
         self.R = R
         self.B = B
         self.Cl = Cl
         self.tsr = tsr
         self.Cl_Cd_max_aoa = Cl_Cd_max_aoa*pi/180.0 # convert to radians
-        
+
         # Calculated variables
         self.r_R = linspace(rStart,rEnd,nElem)
         self.r = self.r_R*R
         self.tsr_r = self.tsr*self.r_R
-        self.phi = array([])      
+        self.phi = array([])
         for i in range(size(self.tsr_r)):
             self.phi = append(self.phi,math.atan(2.0/3.0/self.tsr_r[i]))
         self.phi_degrees = self.phi*180.0/pi
@@ -58,19 +58,19 @@ class Blade(object):
         plot(self.r_R,self.c_R)
         xlabel('r/R')
         ylabel('c/R')
-        
+
         figure()
         plot(self.r_R,self.twist_degrees)
         xlabel('r/R')
         ylabel('Blade twist angle (deg)')
-        
+
     def __str__(self):
         ''' Set out output of the print command'''
         for attr, value in self.__dict__.iteritems():
-            print attr, value
+            print(attr, value)
         return ''
     def __repr__(self):
         ''' Set out output of the function'''
         for attr, value in self.__dict__.iteritems():
-            print attr, value
+            print(attr, value)
         return ''

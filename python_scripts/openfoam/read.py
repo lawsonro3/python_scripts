@@ -16,7 +16,7 @@ class OpenFOAMInput(object):
         Note that this function only reads scalar and boolean/string inputs from
         an OpenFOAM intput input file
         '''
-        
+
         with open(self.file,'r') as fid:
             raw = fid.readlines()
 
