@@ -4,14 +4,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import imp
 import os
-plt.close('all')
-
 
 # import precursor functions
 import python_scripts.openfoam.sowfa_precursor as sowfa
-from python_scripts.openfoam.read import read_input as read
+from python_scripts.openfoam.read import read_input as read_set_up
+from python_scripts.materials_properties.physical_constants import Constants as const
 
-setUp = read('/Users/mlawson/scratch/setUp')                 # Read data from SOWFA 'setUp' file
+plt.close('all')
+
+setUp = read_set_up('/Users/mlawson/scratch/setUp')# Read data from SOWFA 'setUp' file
 inputData = setUp.data
 inputData['avg_time'] = 18000                      # list the times in the averaging directory
 inputData['avg_width'] = 2000                      # time to average about (s)
@@ -40,28 +41,20 @@ sowfa.Umean_h(inputData)
 
 
 # plot other stuff
-
 z = np.linspace(inputData['zMin'],inputData['zMax'],1000)
 U = inputData['U0Mag']*(z/inputData['windHeight'])**inputData['alpha']
 
 plt.figure(num='U vs. z')
-plt.plot(U,z,'r-')
+plt.plot(U,z,'r-',label='U')
 plt.plot([2,12],[inputData['windHeight'],inputData['windHeight']],'k--')
-
-g = 9.81
-#Q_s = 0.0 # Should this be set to heatingRate?
 
 
 #wStarAvg = ((g/inputData['TRef'])*Q_s*inputData['ziAvg'])**(1./3.) # Jen's origional with Qs=0
-wStarAvg = ((g/inputData['TRef'])*inputData['heatingRate']*inputData['ziAvg'])**(1./3.)
+wStarAvg = ((const().g/inputData['TRef'])*inputData['heatingRate']*inputData['ziAvg'])**(1./3.)
 #L = -(inputData['TRef']*inputData['uStarAvg']**3)/(g*Q_s*0.4)
 #neg_zi_L = -inputData['ziAvg']/L
 tau_uStar = inputData['ziAvg']/inputData['uStarAvg']
 tau_wStar = inputData['ziAvg']/wStarAvg
-
-#U_top = np.sqrt( (U[]) )
-
-
 
 U_top = np.sqrt( inputData['Uvec'][3,0]**2 + inputData['Uvec'][3,1]**2 )
 U_hub = np.sqrt( inputData['Uvec'][2,0]**2 + inputData['Uvec'][2,1]**2 )

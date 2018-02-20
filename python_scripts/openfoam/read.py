@@ -10,7 +10,6 @@ class OpenFOAMInput(object):
         self.file = os.path.abspath(input_file)
         self._read()
 
-
     def _read(self):
         '''
         Note that this function only reads scalar and boolean/string inputs from
@@ -53,4 +52,6 @@ def read_input(input_file):
 
     data = OpenFOAMInput(input_file)
 
+    print('\nSuccesfully read '  + input_file)
+    
     return data

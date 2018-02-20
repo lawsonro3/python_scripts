@@ -18,6 +18,8 @@ def read_h_levels_cell(inputData):
     return zCell
 
 def theta_w_avg_cell(inputData):
+    '''
+    '''
 
     zCell = inputData['zCell']
 
@@ -150,19 +152,13 @@ def Umean_avg_nonnormalized(inputData):
     UVMeanAvg = UVMeanAvg/dtSum
 
     # find d<U>dz at top of first cell for use later
-
-    dudz1Avg = (UMeanAvg.iloc[1]-UMeanAvg.iloc[0])/(zCell[1]-zCell[0])
-    dvdz1Avg = (VMeanAvg.iloc[1]-UMeanAvg.iloc[0])/(zCell[1]-zCell[0])
+    inputData['dUdz1Avg'] = (UMeanAvg.iloc[1]-UMeanAvg.iloc[0])/(zCell[1]-zCell[0])
+    inputData['dvdz1Avg'] = (VMeanAvg.iloc[1]-UMeanAvg.iloc[0])/(zCell[1]-zCell[0])
 
     # phi_m
     z_f = 0.5*(zCell[1:] + zCell[0:-1])
     phi_m = (inputData['kappa']/inputData['uStarAvg'])*z_f*((np.array(UVMeanAvg.iloc[1:])-np.array(UVMeanAvg.iloc[0:-1])))/(zCell[1:]-zCell[0:-1])
 
-
-    plt.figure(num='Umean_avg_nonnormalized')
-    plt.plot(phi_m,z_f/inputData['ziAvg'])
-    plt.xlabel(r'$\phi_m$')
-    plt.ylabel(r'$z/z_i$')
 
     # find wind direction
     windDir = np.array(np.arctan2(VMeanAvg,UMeanAvg))
@@ -185,7 +181,7 @@ def Umean_avg_nonnormalized(inputData):
     Uvec = np.zeros((len(inputData['heights']),3))
     Umag = np.zeros(len(inputData['heights']))
 
-    dirAvg = np.zeros(len(inputData['heights']))
+    inputData['dirAvg'] = np.zeros(len(inputData['heights']))
 
     for i in range(len(inputData['heights'])):
         Uvec[i,0] = interp1d(zCell,UMeanAvg,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
@@ -194,13 +190,16 @@ def Umean_avg_nonnormalized(inputData):
 
         Umag[i] = np.sqrt( Uvec[i,0]**2 + Uvec[i,1]**2 + Uvec[i,2]**2 )
 
-        dirAvg[i] = interp1d(zCell,windDir,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
+        inputData['dirAvg'][i] = interp1d(zCell,windDir,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
 
 
-    # plot u
+    plt.figure(num='normalized u_mean_avg')
+    plt.plot(phi_m,z_f/inputData['ziAvg'])
+    plt.xlabel(r'$\phi_m$')
+    plt.ylabel(r'$z/z_i$')
+    plt.title('normalized u velocity')
 
-
-    plt.figure(num='Vel vs. zCell')
+    plt.figure(num='u_mean_avg, v_mean_avg, uv_mean_avg velocity')
     plt.plot(UMeanAvg,zCell,'k--',linewidth=3,label=r'$\langle U_x \rangle$')
     plt.plot(VMeanAvg,zCell,'k:',linewidth=3,label=r'$\langle U_y \rangle$')
     plt.plot(UVMeanAvg,zCell,'k-',linewidth=3,label=r'$\langle |U| \rangle$')
@@ -208,31 +207,25 @@ def Umean_avg_nonnormalized(inputData):
     plt.legend()
     plt.xlabel(r'$\langle U_{i} \rangle$ (m/s)')
     plt.ylabel(r'$z$ (m)')
+    plt.title('average velocities')
 
-    # plot w
-
-
-    plt.figure(num='WMeanAvg vs ZCell')
+    plt.figure(num='w_mean velocity')
     plt.plot(WMeanAvg,zCell,'k-',linewidth=3)
     plt.xlabel(r'$\langle W \rangle$ (m/s)')
     plt.ylabel(r'$z$ (m)')
+    plt.title('average w velocity')
 
-    # wind direction
-
-
+    plt.figure(num='wind direction')
     plt.plot(windDir,zCell,'k-')
-    plt.figure(num='windDir vs ZCell')
     plt.xlabel(r'wind direction ($^\circ$)')
     plt.ylabel(r'$z$ (m)')
+    plt.title('wind direction')
 
-    # plot normalized velocities
-
-
-    plt.figure(num='UMeanAvg/U0Mag vs UMeanAvg/V0Mag')
+    plt.figure(num='normalized velocities')
     plt.plot(UMeanAvg/inputData['U0Mag'],VMeanAvg/inputData['U0Mag'],'k-') #should this be wmag?
     plt.xlabel(r'$\langle U \rangle/U_{g}$')
     plt.ylabel(r'$\langle V \rangle/U_{g}$')
-
+    plt.title('normalized velocities')
 
     plt.figure(num='Some turb stuff')
     plt.semilogx(zCell/inputData['z0'],inputData['kappa']*UVMeanAvg/inputData['uStarAvg'],'k-')
@@ -240,13 +233,8 @@ def Umean_avg_nonnormalized(inputData):
     plt.ylabel(r'$(\kappa/u_{*}) \langle U \rangle$')
     plt.title(r'$\langle |U| \rangle$ law of the wall')
 
-
-    inputData['dUdz1Avg'] = dudz1Avg
-    inputData['dVdz1Avg'] = dvdz1Avg
     inputData['Uvec'] = Uvec
     inputData['Umag'] = Umag
-    inputData['dir'] = dirAvg
-
 
     return inputData
 
@@ -443,7 +431,6 @@ def variances_avg_cell(inputData):
     sum23_avg = vwMeanAvg + R23_MeanAvg
 
     # find the turbulence intensity and tke at various heights
-
     windDir = np.arctan2(inputData['Uvec'][:,1],inputData['Uvec'][:,0])
     for i in range(len(windDir)):
         if windDir[i] < 0.0:
@@ -575,13 +562,10 @@ def Umean_h(inputData):
     nt = len(t)
 
     # find <U> and <V> at a specified height
-
     Umeanz = Umean[:,zindex1] + (inputData['zLevel']-zCell[zindex1])*(Umean[:,zindex2]-Umean[:,zindex1])/(zCell[zindex2]-zCell[zindex1])
     Vmeanz = Vmean[:,zindex1] + (inputData['zLevel']-zCell[zindex1])*(Vmean[:,zindex2]-Vmean[:,zindex1])/(zCell[zindex2]-zCell[zindex1])
 
     # plot stuff
-
-    
     plt.figure(num='t vs Umeanz/U0Mag')
     plt.plot(t,Umeanz/inputData['U0Mag'],'k')
     plt.xlabel('t (s)')
