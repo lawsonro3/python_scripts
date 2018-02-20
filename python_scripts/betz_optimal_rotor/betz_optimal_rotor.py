@@ -74,3 +74,9 @@ class Blade(object):
         for attr, value in self.__dict__.iteritems():
             print(attr, value)
         return ''
+
+if __name__ == '__main__':
+    blade=betz.Blade()
+    blade.plotBlade()
+    print blade
+    raw_input('Press enter to exit')

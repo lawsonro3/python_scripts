@@ -1,47 +1,109 @@
+'''This object allows skin friction and wall sheer stress to be calculated
+'''
 import numpy as np
 
-class SkinFriction(object):
-    def model(self, Re) : pass
+class SkinFrictionModel(object):
+    def __int__(self, Re, rho, u, nu, y_plus):
+        self.testVar = 'banana'
 
-class LogLaw(SkinFriction):
-    def algorithm(self, Re):
-        Cf = 0.0576*Re**(-1/5)
-        return Cf
 
-class Schlichting(SkinFriction):
-    def algorithm(self, Re):
-        Cf = (3*np.log10(self.Re) - 0.65)**(-2.3)
-        return Cf
+    def _cf_calculate(self):
+        pass
+
+    def _tau_wall_calculate(self):
+        self.tau_wall = 1.0/2.0*self.Cf*self.rho*self.u**2.0
+        print('\ttau wall:',self.tau_wall)
+
+    def _u_star_calculate(self):
+        self.u_star = np.sqrt(self.tau_wall/self.rho)
+        print('\tu*:',self.u_star)
+
+    def _y_calculate(self):
+        '''Calculate y for y+ input
+        '''
+        self.y = self.y_plus*self.nu/self.u_star
+        print('\ty @ y+ =',self.y_plus,":",self.y)
+
+class PowerLaw(SkinFrictionModel):
+    def _cf_calculate(self):
+        self.Cf = 0.0576*self.Re**(-1/5)
+        print('1/7th Power Law\n\tCf:',self.Cf)
+
+class PowerLawExp(SkinFrictionModel):
+    '''1/7 power law with experimental calibration. Equation 21.12 from
+    Schlichting, Hermann (1979), Boundary Layer Theory, ISBN 0-07-055334-3,
+    7th Edition.
+    '''
+    def _cf_calculate(self):
+        self.Cf = 0.0592*self.Re**(-1/5)
+        print('1/7th Power Law Exp\n\tCf:',self.Cf)
+
+class Schlichting(SkinFrictionModel):
+    '''Schlichting, Hermann (1979), Boundary Layer Theory, ISBN 0-07-055334-3,
+    7th Edition. Equation 21.16
+    '''
+    def _cf_calculate(self):
+        self.Cf = (2*np.log10(self.Re) - 0.65)**(-2.3)
+        print('Schlichting\n\tCf:',self.Cf)
 
 class SkinFrictioCalc(object):
-    def __init__(self,model=LogLaw())
+    def __init__(self, Re, rho, u, nu, y_plus, model):
         self.model = model
+        self.model.u = u
+        self.model.rho = rho
+        self.model.nu = nu
+        self.model.y_plus = y_plus
+        self.model.Re = Re
 
-    def __init__(self,Re=None,model="power_law"):
+        self._calculate()
 
-        if Re is None:
-            print('Re must be provided')
-            raise
+    def _calculate(self):
+        self.model._cf_calculate()
+        self.model._tau_wall_calculate()
+        self.model._u_star_calculate()
+        self.model._y_calculate()
 
-        else:
+    def switch_model(self,model):
+        self.model = model
+        self.model._calculate()
+
+class SkinFrictioCalcMulti(object):
+    def __init__(self, Re, rho, u, nu, y_plus):
+            self.u = u
+            self.rho = rho
+            self.nu = nu
+            self.y_plus = y_plus
             self.Re = Re
 
-        self.model = model
+            self.models = []
+            self.model = None
 
-        if self.model=='power_law':
+    # def _calculate(self):
+    #     for m in self.models:
+    #         m._cf_calculate()
+    #         m._tau_wall_calculate()
+    #         m._u_star_calculate()
+    #         m._y_calculate()
 
-            if self.Re < 5e5 or self.Re > 1e7:
-                print('The power law model is only valid for 5e5 < Re <1e7')
-                raise
+    def calculate(self,model):
+        self.models.append(model)
+        self.models[-1].u = self.u
+        self.models[-1].rho = self.rho
+        self.models[-1].nu = self.nu
+        self.models[-1].y_plus = self.y_plus
+        self.models[-1].Re = self.Re
 
-            else:
-                self.Cf = 0.0576*Re**(-1/5)
+        self.models[-1]._cf_calculate()
+        self.models[-1]._tau_wall_calculate()
+        self.models[-1]._u_star_calculate()
+        self.models[-1]._y_calculate()
 
-    Schlichting(self):
+# Tutorial
+if __name__ == '__main__':
 
-        if self.Re > 1e9:
-            print('The Schlichting model is only valid for < 1e9')
-            raise
+    cf = SkinFrictioCalc(Re=1e6, rho=1.2, u=80.0, nu=1.5e-5, y_plus=1.0,model=PowerLaw())
 
-        else:
-            self.Cf = (3*np.log10(self.Re) - 0.65)**(-2.3)
+    cf = SkinFrictioCalcMulti(Re=1e6, rho=1.2, u=80.0, nu=1.5e-5, y_plus=1.0)
+    cf.calculate(model=PowerLaw())
+    cf.calculate(model=PowerLawExp())
+    cf.calculate(model=Schlichting())

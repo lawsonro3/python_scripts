@@ -113,3 +113,20 @@ def FindPeaks(rf,plotData=False):
         grid(True)
 
     return rf
+
+# Tutorial
+if __name__ == '__main__':
+    dataFile = ''
+    adcpData = loadmat(dataFile)
+    V = adcpData['V_nogap']
+    #samples = linspace(0,size(V,0),size(V,0))
+    #timeMin = samples*15.
+    #timeSec = samples*15.*60.
+    #timeHr = samples/4.Argonne National Laboratory
+    #timeDay = samples/4./24.type(nonzero(rain.peaksValue==rain.maxPeakVal))
+
+    testData = V[0:200,84]
+    testData,testDataShift = LowPassFilter(testData)
+    rain = rainflow.CreateData(testData)
+    rain = rainflow.Count(rain)
+    rainflow.Hist(rain,10)

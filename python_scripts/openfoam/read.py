@@ -53,5 +53,11 @@ def read_input(input_file):
     data = OpenFOAMInput(input_file)
 
     print('\nSuccesfully read '  + input_file)
-    
+
     return data
+
+# Tutorial
+if __name__ == '__main__':
+    data = read_input('setUp')
+    print(data.data)
+    print(data.file)
