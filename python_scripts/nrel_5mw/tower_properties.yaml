@@ -1,0 +1,6 @@
+# NREL 5MW data from Section 6 of "Definition of a 5-MW Reference Wind Turbine for Offshore System Development
+base_dia: 6.0 # meters
+base_thickness: 0.027 # meters
+top_dia: 3.87 # meters
+top_thickness: 0.019 # meters
+Youngs_mudulus: 210.0 # GPals

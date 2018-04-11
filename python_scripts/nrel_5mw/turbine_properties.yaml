@@ -1,0 +1,12 @@
+power_rating: 5.0
+rotor_dia: 126.0
+hub_dia: 3.0
+hub_height: 90.0
+cut_in_vel: 3.0
+rated_veldfdsf: 11.4
+cut_out_vel: 25.0
+cut_in_rpm: 6.9
+rated_rpm: 12.1
+rotor_mass: 110000
+nacelle_mass: 240000
+tower_mass: 347460
