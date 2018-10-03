@@ -1,0 +1,27 @@
+# NREL 5MW data from Table 4-1 of "Definition of a 5-MW Reference Wind Turbine for Offshore System Development
+# Elevation of Yaw Bearing above Ground
+yaw_bearing_h: 87.6 # m
+#Vertical Distance along Yaw Axis from Yaw Bearing to Shaft
+yaw_bearing_to_shaft: 1.96256 # m
+#Distance along Shaft from Hub Center to Yaw Axis
+yaw_axis_to_hub: 5.01910 # m
+# Distance along Shaft from Hub Center to Main Bearing
+# 1.912 m
+# Hub Mass
+# 56,780 kg
+# Hub Inertia about Low-Speed Shaft
+# 115,926 kg•m2
+# Nacelle Mass
+# 240,000 kg
+# Nacelle Inertia about Yaw Axis
+# 2,607,890 kg•m2
+# Nacelle CM Location Downwind of Yaw Axis
+# 1.9 m
+# Nacelle CM Location above Yaw Bearing
+# 1.75 m
+# Equivalent Nacelle-Yaw-Actuator Linear-Spring Constant
+# 9,028,320,000 N•m/rad
+# Equivalent Nacelle-Yaw-Actuator Linear-Damping Constant
+# 19,160,000 N•m/(rad/s)
+# Nominal Nacelle-Yaw Rate
+# 0.3 o/s
