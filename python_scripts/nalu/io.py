@@ -1,10 +1,10 @@
 import numpy as np
 
-def read_nalu_log(log_file=None):
+def read_log(log_file=None):
     '''This function reads Nalu log files
-       Currently, the function only reads timing info output by nalu-wind 
+       Currently, the function only reads timing info output by nalu-wind
        It would be good to add more functionality to this function
-    
+
     '''
 
     if log_file is None:
