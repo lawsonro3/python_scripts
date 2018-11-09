@@ -1,3 +1,5 @@
+#!/home/mlawson/miniconda3/bin/python
+
 import os
 
 import numpy as np
@@ -37,9 +39,9 @@ class OpenFOAMInput(object):
                 else:
                     tmp = raw[i].strip().rstrip().split()
                     try:
-                        self.data[tmp[0]] = np.float(tmp[1][:-1])
+                        self.data[tmp[0].replace('"', '')] = np.float(tmp[1][:-1])
                     except:
-                        self.data[tmp[0]] = tmp[1][:-1]
+                        self.data[tmp[0].replace('"', '')] = tmp[1][:-1]
 
 
 
