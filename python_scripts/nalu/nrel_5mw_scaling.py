@@ -9,6 +9,7 @@ except ImportError:
 if __name__ == '__main__':
 
     root_dir = '/Users/mlawson/GoogleDrive/Work/NREL/Projects/HFM-ECP/nrel_5mw/results/cori_data/'
+
     if os.path.isdir(root_dir) is False:
         raise Exception('root_dir does not exist')
 
