@@ -18,14 +18,14 @@ setup(
 
     author='Michael Lawson',
 
-    author_email='michael.lawson@nrel.gov',
+    author_email='lawsonro3@gmail.com',
 
     license='Apache 2.0',
 
     classifiers=[
-        'Development Status :: Release',
-        'Intended Audience :: Ocean research community',
-        'License ::Apache 2.0',
+        #'Development Status :: Release',
+        #'Intended Audience :: Ocean research community',
+        #'License :: OSI Approved :: Apache Software License 2.0 (Apache-2.0)',
         'Programming Language :: Python :: 3'
     ],
 
