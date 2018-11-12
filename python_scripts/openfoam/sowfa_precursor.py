@@ -10,6 +10,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import os
+from glob import glob
+
+def create(dir='./',time_dir='0'):
+    precursor = dict()
+    precursor['baseDir'] = dir
+    precursor['avg_dir'] = os.path.join(precursor['baseDir'],'postProcessing/averaging')
+    precursor['setUpFile'] = os.path.join(precursor['baseDir'],'setUp')
+    precursor['times'] =  glob(os.path.join(precursor['baseDir'],precursor['avg_dir'],"*"))
+    precursor['hLevelCellFile'] = os.path.join(precursor['times'][0],'hLevelsCell')
+    precursor['time_dir'] = os.path.join(precursor['avg_dir'],'25000')
+
+    return precursor
 
 def read_h_levels_cell(inputData):
     h_levels_cell_file = os.path.join(inputData['base_dir'],inputData['avg_dir'],inputData['times'],'hLevelsCell')
@@ -87,8 +99,8 @@ def theta_w_avg_cell(inputData):
     plt.ylabel(r'$z/z_{i}$')
 
     plt.show()
-
-    return ziAvg
+    inputData['ziAvg'] = ziAvg
+    return inputData
 
 def Umean_avg_nonnormalized(inputData):
 
@@ -181,7 +193,7 @@ def Umean_avg_nonnormalized(inputData):
     Uvec = np.zeros((len(inputData['heights']),3))
     Umag = np.zeros(len(inputData['heights']))
 
-    inputData['dirAvg'] = np.zeros(len(inputData['heights']))
+    inputData['dir'] = np.zeros(len(inputData['heights']))
 
     for i in range(len(inputData['heights'])):
         Uvec[i,0] = interp1d(zCell,UMeanAvg,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
@@ -190,7 +202,7 @@ def Umean_avg_nonnormalized(inputData):
 
         Umag[i] = np.sqrt( Uvec[i,0]**2 + Uvec[i,1]**2 + Uvec[i,2]**2 )
 
-        inputData['dirAvg'][i] = interp1d(zCell,windDir,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
+        inputData['dir'][i] = interp1d(zCell,windDir,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
 
 
     plt.figure(num='normalized u_mean_avg')
@@ -276,6 +288,7 @@ def Tmean_avg_nonnormalized(inputData):
     Tmag = np.zeros(len(inputData['heights']))
     for i in range(len(inputData['heights'])):
         Tmag[i] = interp1d(zCell,TMeanAvg,kind='linear',fill_value='extrapolate')(inputData['heights'][i])
+    inputData['Tmag'] = Tmag
 
     # plot results
 
@@ -286,7 +299,7 @@ def Tmean_avg_nonnormalized(inputData):
     plt.xlabel(r'$\langle \theta \rangle$ (K)')
     plt.ylabel(r'$z$ (m)')
 
-    return Tmag
+    return inputData
 
 def variances_avg_cell(inputData):
 
