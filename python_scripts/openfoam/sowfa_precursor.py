@@ -86,6 +86,16 @@ class Sim(object):
         self.input['avg_width'] = avg_width
         self.input['z_level'] = z_level
 
+        if os.path.isdir(self.input['avg_dir']) is True:
+            pass
+        else:
+            raise Exception(self.input['avg_dir'] + ' does not exist')
+
+        if os.path.isdir(self.input['time_dir']) is True:
+            pass
+        else:
+            raise Exception(self.input['time_dir'] + ' does not exist')
+
     # def _create(self,dir=None,time_dir=None):
 
 
