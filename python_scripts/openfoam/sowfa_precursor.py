@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import os
-from glob import glob
+# from glob import glob
 import read
 
 class OpenFOAMInput(object):
@@ -67,10 +67,14 @@ class Sim(object):
         self.input['dir'] = dir
         self.input['avg_dir'] = os.path.join(dir,'postProcessing/averaging')
         self.input['time_dir'] = os.path.join(self.input['avg_dir'],time_dir)
-        self.input['times'] =  glob(os.path.join(self.input['avg_dir'],"*"))
+        # self.input['times'] =  glob(os.path.join(self.input['avg_dir'],"*"))
 
-        self.input['hLevelCellFile'] = os.path.join(self.input['times'][0],'hLevelsCell')
-        self.input['zCell'] = np.array(open(self.input['hLevelCellFile'],'r').read().split()).astype(np.float)
+        self.input['hLevelCellFile'] = os.path.join(self.input['time_dir'],'hLevelsCell')
+        try:
+            self.input['zCell'] = np.array(open(self.input['hLevelCellFile'],'r').read().split()).astype(np.float)
+            print('Read "zCell" from:\n\t' + self.input['hLevelCellFile'])
+        except:
+            raise Exception('The file ' + self.input['hLevelCellFile'] + ' does not exist or is formatted incorrectly' )
 
         # Read setUp file
         setUpFile = os.path.join(dir,'setUp')
@@ -86,6 +90,7 @@ class Sim(object):
         self.input['avg_width'] = avg_width
         self.input['z_level'] = z_level
 
+        # Check to make sure directories and files exist
         if os.path.isdir(self.input['avg_dir']) is True:
             pass
         else:
@@ -110,12 +115,6 @@ class Sim(object):
                 break
         print('Set uStarMean = ' + str(self.input['uStarMean']) + ' from SOWFA ".log" file:\n\t' + self.input['logFile'])
 
-    def read_h_levels_cell(self):
-        h_levels_cell_file = os.path.join(self.input['base_dir'],self.input['avg_dir'],self.input['times'],'hLevelsCell')
-        zCell = open(h_levels_cell_file,'r').read().split()
-        self.zCell = np.array([float(i) for i in zCell])
-
-
     def theta_w_avg_cell(self):
         '''
         '''
@@ -124,7 +123,7 @@ class Sim(object):
 
         nzCell = len(zCell)
 
-        ni = len(self.input['times'])
+        # ni = len(self.input['times'])
 
         strData = os.path.join(self.input['time_dir'], 'Tw_mean')
         data = pd.read_csv(strData,header=None,delimiter=' ')
