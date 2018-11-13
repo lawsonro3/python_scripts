@@ -1,40 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-# import imp
 import os
 from glob import glob
-
-# User functions
-import read
+from importlib import reload
 import sowfa_precursor
 
-inputData =  sowfa_precursor.create(dir='/Users/mlawson/Peregrine/windsim/wake_steering/stableABLRuns/infPer_0.001m_5m',time_dir=25000)
-inputData['avg_time'] = 29000                      # time to average about (s)
-inputData['avg_width'] = 2000                      # average width (s)
-inputData['zLevel'] = 90.0                         # height to plot average velocity vs. time (m)
-inputData['uStarAvg'] = 0.72
+sowfa_precursor = reload(sowfa_precursor)
+plt.close('all')
 
-setUp = read.read_input(inputData['setUpFile'])
-inputData.update(setUp.data)
+# Creat sowfa_precursor object and enter neccisary user inputs
+infPer_001m_5m =  sowfa_precursor.Sim(
+    dir='/Users/mlawson/Peregrine/windsim/wake_steering/stableABLRuns/infPer_0.001m_5m',
+    log='log.3.ABLSolver',
+    time_dir='25000',
+    avg_time=29000,
+    avg_width=2000,
+    z_level=90.0)
 
-inputData['heights'] = np.array([0,1/2,1,3/2,2,3,4,5])*inputData['windHeight']
+# Enter heights to do stuff... ;)
+infPer_001m_5m.input['heights'] = np.array([0,1/2,1,3/2,2,3,4,5])*infPer_001m_5m.input['windHeight']
 
-
-inputData['zCell'] = np.array(open(inputData['hLevelCellFile'],'r').read().split()).astype(np.float)
-
-# print(inputData)
-
-
-inputData = sowfa_precursor.theta_w_avg_cell(inputData)
-
-inputData = sowfa_precursor.Umean_avg_nonnormalized(inputData)
-
-inputData = sowfa_precursor.Tmean_avg_nonnormalized(inputData)
-
-inputData = sowfa_precursor.variances_avg_cell(inputData)
-
-
-
-
-
+# Make plots
+infPer_001m_5m.theta_w_avg_cell()
+infPer_001m_5m.Umean_avg_nonnormalized()
+infPer_001m_5m.Tmean_avg_nonnormalized()
+infPer_001m_5m.variances_avg_cell()
