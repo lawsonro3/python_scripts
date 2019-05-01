@@ -2,6 +2,17 @@
 '''
 import numpy as np
 
+def main():
+    '''
+    Simple tutorial on how to use this to calculate y+
+    '''
+    cf = SkinFrictioCalc(Re=1e6, rho=1.2, u=80.0, nu=1.5e-5, y_plus=1.0,model=PowerLaw())
+
+    cf = SkinFrictioCalcMulti(Re=3e6, rho=1.2, u=60.0, nu=1.5e-5, y_plus=1.0)
+    cf.calculate(model=PowerLaw())
+    cf.calculate(model=PowerLawExp())
+    cf.calculate(model=Schlichting())
+
 class SkinFrictionModel(object):
     def __int__(self, Re, rho, u, nu, y_plus):
         self.testVar = 'banana'
@@ -100,10 +111,4 @@ class SkinFrictioCalcMulti(object):
 
 # Tutorial
 if __name__ == '__main__':
-
-    cf = SkinFrictioCalc(Re=1e6, rho=1.2, u=80.0, nu=1.5e-5, y_plus=1.0,model=PowerLaw())
-
-    cf = SkinFrictioCalcMulti(Re=1e6, rho=1.2, u=80.0, nu=1.5e-5, y_plus=1.0)
-    cf.calculate(model=PowerLaw())
-    cf.calculate(model=PowerLawExp())
-    cf.calculate(model=Schlichting())
+    main()
