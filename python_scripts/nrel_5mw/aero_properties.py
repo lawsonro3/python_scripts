@@ -15,3 +15,6 @@ class NREL_5MW(object):
         self.twist_axis = np.array([0.5, 0.4682, 0.4417, 0.4035, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375, 0.375])*self.chord
         self.percent_span = self.r_nodes / self.radius * 100.0
         self.airfoil_names = np.array(['Cylinder1.dat', 'Cylinder1.dat', 'Cylinder2.dat', 'DU40_A17.dat', 'DU35_A17.dat', 'DU35_A17.dat', 'DU30_A17.dat', 'DU25_A17.dat', 'DU25_A17.dat', 'DU21_A17.dat', 'DU21_A17.dat', 'NACA64_A17.dat', 'NACA64_A17.dat', 'NACA64_A17.dat', 'NACA64_A17.dat', 'NACA64_A17.dat', 'NACA64_A17.dat'],dtype='S')
+
+        self.avg_chord = np.sum(self.chord*self.dr_nodes)/np.sum(self.dr_nodes)
+
