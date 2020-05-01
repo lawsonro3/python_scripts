@@ -28,7 +28,7 @@
 # You can also deploy your own backend outside of matplotlib by
 # referring to the module name (which must be in the PYTHONPATH) as
 # 'module://my_backend'
-backend: Qt5Agg
+#backend: Qt5Agg
 #backend: TKAgg
 #%matplotlib notebook
 
